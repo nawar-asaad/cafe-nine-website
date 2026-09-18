@@ -1,27 +1,1485 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Café Nine | مقهى ناين</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-:root{--g:#075951;--d:#043b36;--c:#f7f4ec;--gold:#ead8ae;--brown:#b87558;--muted:#68736e;--line:#dfe8e2;--shadow:0 18px 48px #043b3618}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--c);color:#17211f;font-family:"IBM Plex Sans Arabic",sans-serif;line-height:1.8}h1,h2,h3,button,select{font-family:"Noto Kufi Arabic",sans-serif}a{text-decoration:none;color:inherit}.wrap{width:min(1160px,calc(100% - 30px));margin:auto}.top{background:var(--d);color:#fff;text-align:center;padding:6px;font-size:12px}header{position:sticky;top:0;z-index:5;background:#f7f4ecef;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.nav{height:78px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:9px;font:900 19px "Noto Kufi Arabic";color:var(--d)}.brand img,.foot img{width:50px;height:50px;border-radius:50%;object-fit:cover;background:#fff}.brand small{display:block;font:9px "IBM Plex Sans Arabic";color:var(--brown);letter-spacing:2px;direction:ltr}.links{display:flex;gap:20px;font-size:13px;font-weight:700;color:var(--d)}.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;padding:11px 19px;background:var(--g);color:#fff;font-weight:700;cursor:pointer}.btn.gold{background:var(--gold);color:var(--d)}.hero{min-height:600px;display:grid;place-items:center;text-align:center;color:#fff;background:linear-gradient(90deg,#043b36ee,#075951bd),url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1800&q=85') center/cover}.hero img{width:110px;height:110px;margin:auto;border:5px solid #fffc;border-radius:50%;object-fit:cover}.hero h1{font-size:clamp(2.2rem,7vw,5rem);line-height:1.5;margin:15px 0;letter-spacing:-.07em}.hero h1 span{color:var(--gold)}.hero p{max-width:620px;margin:auto;color:#fffd;font-size:16px}.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:25px}section{padding:72px 0}.heading{text-align:center;margin-bottom:32px}.heading label{color:var(--brown);font-size:12px;font-weight:800}.heading h2{color:var(--d);font-size:clamp(1.6rem,4vw,2.6rem);margin:6px 0;font-weight:900}.heading p{color:var(--muted)}.grid2,.order{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow)}.card h2,.card h3{color:var(--g);margin-top:0}.about-image{min-height:300px;border-radius:22px;background:url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85') center/cover}.features{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.feature{text-align:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px}.feature i{font-style:normal;font-size:25px}.feature h3{font-size:15px;color:var(--d);margin:6px}.feature p{font-size:12px;color:var(--muted);margin:0}.menu{background:var(--d)}.menu .heading h2{color:#fff}.menu .heading label,.menu .heading p{color:var(--gold)}.filters{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:22px}.filter{border:1px solid #fff4;border-radius:99px;background:transparent;color:#fff;padding:8px 13px;cursor:pointer}.filter.active{background:var(--gold);color:var(--d)}.items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.item{display:flex;align-items:center;gap:12px;min-height:108px;padding:14px;border:1px solid #fff2;border-radius:17px;background:#ffffff12}.item:hover{background:#ffffff22}.item img,.item .placeholder{width:68px;height:68px;flex:none;border-radius:14px;object-fit:cover}.placeholder{display:grid;place-items:center;background:#0b655b;color:var(--gold);font:700 25px "Noto Kufi Arabic"}.itembody{flex:1;min-width:0}.item h3{font-size:14px;color:#fff;margin:0}.item p{font-size:11px;color:#fffa;margin:0;direction:ltr;text-align:right}.price{color:var(--gold);direction:ltr;white-space:nowrap;font-size:12px}.add{border:0;border-radius:99px;background:#ead8ae33;color:var(--gold);font-size:10px;padding:5px 9px;cursor:pointer;margin-top:6px}.order{background:linear-gradient(#f7f4ec,#eee8dc);padding:72px max(15px,calc((100% - 1160px)/2))}.order>.card{box-shadow:var(--shadow)}label.field{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--d);margin-top:12px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff;outline:0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pay{margin-top:15px;padding:14px;background:#fbfaf7;border:1px solid var(--line);border-radius:15px}.pay label{display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-size:12px}.cart{position:sticky;top:100px}.cartlist{display:grid;gap:9px;max-height:450px;overflow:auto;margin:15px 0}.cartitem{display:grid;grid-template-columns:45px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:7px}.cartitem img,.cartpic{width:45px;height:45px;border-radius:9px;object-fit:cover}.cartpic{display:grid;place-items:center;background:var(--g);color:var(--gold)}.cartitem strong{font-size:11px;color:var(--d)}.cartitem small{display:block;color:var(--brown);direction:ltr}.qty button,.remove{border:0;background:var(--green-soft,#e4f0ec);color:var(--g);border-radius:50%;cursor:pointer;width:22px;height:22px}.remove{background:transparent;color:var(--brown);font-size:16px}.total{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:13px;color:var(--d);font-weight:800}.location{padding:13px;border:1px solid var(--line);border-radius:14px;margin-top:12px;background:#fbfaf7}.location button,.location a{font-size:11px;margin:6px 3px 0 0}.status{font-size:11px;color:var(--muted)}.social{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.social .photo{height:190px;background-size:cover;background-position:center}.social article:nth-child(1) .photo{background-image:url('https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=85')}.social article:nth-child(2) .photo{background-image:url('https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=800&q=85')}.social article:nth-child(3) .photo{background-image:url('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=85')}.social article{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:18px}.social .body{padding:15px}.social h3{color:var(--d);font-size:15px;margin:0}.social p{font-size:12px;color:var(--muted)}.visit{background:#eee8dc}.map{min-height:300px;display:grid;place-items:center;text-align:center;color:#fff;background:linear-gradient(#043b36c9,#043b36c9),url('https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=85') center/cover;border-radius:22px}.foot{background:var(--d);color:#fff;padding:25px 0;display:flex;justify-content:space-between;align-items:center}.hidden{display:none!important}@media(max-width:850px){.links{display:none}.grid2,.order{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}.social{grid-template-columns:1fr 1fr}.cart{position:static}}@media(max-width:600px){.items,.row,.social{grid-template-columns:1fr}.hero h1{font-size:2.4rem}.card{padding:20px}.foot{display:block}.foot>*{margin:8px 0}}
-</style></head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Café Nine | مقهى ناين</title>
+  <meta name="description" content="Café Nine — مقهى في الزبير" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green: #075951;
+      --dark: #043b36;
+      --green-soft: #e4f0ec;
+      --cream: #f7f4ec;
+      --cream-dark: #eee8dc;
+      --white: #ffffff;
+      --text: #17211f;
+      --muted: #68736e;
+      --gold: #ead8ae;
+      --brown: #b87558;
+      --line: rgba(7, 89, 81, 0.13);
+      --shadow: 0 18px 48px rgba(4, 59, 54, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--text);
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      line-height: 1.8;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+    button, input, textarea, select { font-family: inherit; }
+
+    .container {
+      width: min(1180px, calc(100% - 30px));
+      margin: auto;
+    }
+
+    .top-strip {
+      background: var(--dark);
+      color: white;
+      text-align: center;
+      padding: 7px 15px;
+      font-size: 12px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(247, 244, 236, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--dark);
+      font-weight: 900;
+      font-size: 20px;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .brand img,
+    .footer-brand img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--brown);
+      font-size: 9px;
+      letter-spacing: 2px;
+      direction: ltr;
+      line-height: 1.2;
+    }
+
+    .links {
+      display: flex;
+      gap: 22px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .btn, .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 20px;
+      background: var(--green);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover, .primary-btn:hover { transform: translateY(-2px); }
+
+    .btn.gold {
+      background: var(--gold);
+      color: var(--dark);
+    }
+
+    .hero {
+      min-height: 620px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background:
+        linear-gradient(90deg, rgba(4,59,54,.93), rgba(7,89,81,.72)),
+        url("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1800&q=85")
+        center / cover;
+      color: white;
+    }
+
+    .hero .inner {
+      max-width: 760px;
+      padding: 72px 0;
+    }
+
+    .hero-logo {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 5px solid rgba(255,255,255,.8);
+      display: block;
+      margin: auto;
+    }
+
+    .hero-kicker {
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 18px;
+    }
+
+    .hero h1 {
+      margin: 16px 0;
+      font-size: clamp(2.3rem, 7vw, 5rem);
+      line-height: 1.45;
+      letter-spacing: -0.07em;
+      font-weight: 900;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .hero h1 span { color: var(--gold); }
+
+    .hero p {
+      max-width: 620px;
+      margin: auto;
+      color: rgba(255,255,255,.88);
+      font-size: 16px;
+      line-height: 2;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    section { padding: 78px 0; }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .section-heading label {
+      color: var(--brown);
+      font-size: 12px;
+      font-weight: 800;
+      display: block;
+    }
+
+    .section-heading h2 {
+      margin: 8px 0 12px;
+      color: var(--dark);
+      font-size: clamp(1.7rem, 4vw, 2.8rem);
+      letter-spacing: -0.06em;
+      font-weight: 900;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .section-heading p {
+      max-width: 650px;
+      margin: auto;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .about-grid,
+    .visit-grid,
+    .order-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3, .card h2 {
+      color: var(--green);
+      margin-top: 0;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .about-image {
+      min-height: 330px;
+      border-radius: 22px;
+      background:
+        linear-gradient(rgba(4,59,54,.15), rgba(4,59,54,.15)),
+        url("https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85")
+        center / cover;
+      box-shadow: var(--shadow);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .feature {
+      padding: 22px 16px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      text-align: center;
+    }
+
+    .feature i {
+      font-style: normal;
+      font-size: 25px;
+    }
+
+    .feature h3 {
+      color: var(--dark);
+      font-size: 15px;
+      margin: 8px 0 6px;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .menu-section {
+      background: var(--dark);
+    }
+
+    .menu-section .section-heading h2 { color: white; }
+    .menu-section .section-heading label,
+    .menu-section .section-heading p { color: var(--gold); }
+
+    .filters {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .filter {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.25);
+      color: white;
+      border-radius: 999px;
+      padding: 8px 13px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .filter.active {
+      background: var(--gold);
+      color: var(--dark);
+      border-color: var(--gold);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 110px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .menu-item:hover {
+      background: rgba(255,255,255,.12);
+    }
+
+    .item-image {
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      background: linear-gradient(135deg, #0b655b, var(--dark));
+      font-weight: 900;
+      font-size: 25px;
+      overflow: hidden;
+    }
+
+    .item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-body h3 {
+      margin: 0;
+      color: white;
+      font-size: 14px;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .item-body p {
+      margin: 4px 0 0;
+      direction: ltr;
+      text-align: right;
+      color: rgba(255,255,255,.7);
+      font-size: 11px;
+    }
+
+    .price {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      direction: ltr;
+      white-space: nowrap;
+    }
+
+    .add-to-cart {
+      margin-top: 6px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(234,216,174,.18);
+      color: var(--gold);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: white;
+      padding: 24px;
+      border: 1px dashed rgba(255,255,255,.3);
+      border-radius: 16px;
+    }
+
+    .order-section {
+      background: linear-gradient(180deg, var(--cream), var(--cream-dark));
+    }
+
+    .order-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-top: 10px;
+    }
+
+    .field input, .field textarea, .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 12px;
+      padding: 11px 12px;
+      outline: none;
+      resize: vertical;
+    }
+
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(7,89,81,.08);
+    }
+
+    .location-box {
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+    }
+
+    .location-box strong {
+      display: block;
+      font-size: 14px;
+      color: var(--dark);
+    }
+
+    .location-box .status {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .location-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .location-link {
+      display: inline-block;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .payment-box {
+      margin-top: 10px;
+      background: #fbfaf7;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .payment-box h3 {
+      margin: 0 0 8px;
+      color: var(--dark);
+      font-size: 16px;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .payment-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid transparent;
+    }
+
+    .payment-option input {
+      margin-top: 3px;
+      accent-color: var(--green);
+    }
+
+    .payment-option strong {
+      display: block;
+      color: var(--dark);
+      font-size: 13px;
+    }
+
+    .payment-option small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .payment-option.selected {
+      background: var(--green-soft);
+      border-color: var(--green);
+    }
+
+    .card-notice {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #7d5c1b;
+      background: #fff4da;
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      color: var(--dark);
+    }
+
+    .summary strong {
+      color: var(--green);
+      font-size: 18px;
+    }
+
+    .send-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      background: var(--green);
+      color: white;
+      padding: 14px 18px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .order-disclaimer {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .cart-card {
+      position: sticky;
+      top: 100px;
+    }
+
+    .cart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cart-count {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .cart-items {
+      display: grid;
+      gap: 10px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    .empty-cart {
+      text-align: center;
+      color: var(--muted);
+      padding: 30px 8px;
+    }
+
+    .empty-cart div {
+      font-size: 38px;
+    }
+
+    .empty-cart strong {
+      display: block;
+      color: var(--dark);
+      margin-top: 6px;
+    }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 52px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+    }
+
+    .cart-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0b655b, var(--dark));
+      color: var(--gold);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 20px;
+      overflow: hidden;
+    }
+
+    .cart-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cart-meta strong {
+      display: block;
+      color: var(--dark);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .cart-meta small {
+      color: var(--brown);
+      direction: ltr;
+      display: block;
+      font-size: 11px;
+    }
+
+    .qty {
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--dark);
+    }
+
+    .qty button {
+      width: 22px;
+      height: 22px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .remove-item {
+      border: 0;
+      background: transparent;
+      color: var(--brown);
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-weight: 800;
+      color: var(--dark);
+    }
+
+    .cart-total strong {
+      color: var(--green);
+      font-size: 18px;
+    }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .social-card {
+      overflow: hidden;
+      border-radius: 22px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .social-photo {
+      height: 170px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .social-card:nth-child(1) .social-photo {
+      background-image:
+        linear-gradient(rgba(4,59,54,.2), rgba(4,59,54,.4)),
+        url("https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=85");
+    }
+
+    .social-card:nth-child(2) .social-photo {
+      background-image:
+        linear-gradient(rgba(4,59,54,.2), rgba(4,59,54,.4)),
+        url("https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=800&q=85");
+    }
+
+    .social-card:nth-child(3) .social-photo {
+      background-image:
+        linear-gradient(rgba(4,59,54,.2), rgba(4,59,54,.4)),
+        url("https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=85");
+    }
+
+    .social-body {
+      padding: 18px;
+    }
+
+    .social-body h3 {
+      margin: 0;
+      color: var(--dark);
+      font-size: 16px;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .social-body p {
+      margin: 7px 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .social-body a {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .visit-section {
+      background: var(--cream-dark);
+    }
+
+    .contact-card .meta {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .meta-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .meta strong {
+      display: block;
+      color: var(--dark);
+      font-size: 14px;
+    }
+
+    .meta span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .contact-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .map-card {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      color: white;
+      border-radius: 24px;
+      background:
+        linear-gradient(rgba(4,59,54,.76), rgba(4,59,54,.76)),
+        url("https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1200&q=85")
+        center / cover;
+    }
+
+    .map-card h3 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      color: white;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .map-card p {
+      margin: 0 0 18px;
+      color: rgba(255,255,255,.82);
+    }
+
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 28px 0;
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      font-family: "Noto Kufi Arabic", sans-serif;
+    }
+
+    .copyright {
+      color: rgba(255,255,255,.7);
+      font-size: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 950px) {
+      .links { display: none; }
+      .about-grid,
+      .visit-grid,
+      .order-layout { grid-template-columns: 1fr; }
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .social-grid { grid-template-columns: 1fr; }
+      .cart-card { position: static; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 22px, 560px); }
+      .nav { min-height: 72px; }
+      .brand { font-size: 17px; }
+      .brand img { width: 45px; height: 45px; }
+      section { padding: 64px 0; }
+      .hero { min-height: 560px; }
+      .hero h1 { font-size: 2.4rem; }
+      .features,
+      .menu-grid,
+      .row { grid-template-columns: 1fr; }
+      .social-grid { grid-template-columns: 1fr; }
+      .footer-content {
+        display: block;
+      }
+    }
+  </style>
+</head>
 <body>
-<div class="top">أهلاً بكم في Café Nine — الزبير، محلة الشمال</div>
-<header><div class="wrap nav"><a class="brand" href="#home"><img src="logo.svg" alt="Café Nine"><span>Café Nine<small>COFFEE & MORE</small></span></a><nav class="links"><a href="#about">عن المقهى</a><a href="#menu">المنيو</a><a href="#order">اطلب الآن</a><a href="#visit">موقعنا</a></nav><a class="btn" href="https://www.instagram.com/cafenine.iq/" target="_blank">إنستغرام</a></div></header>
-<main id="home"><section class="hero"><div><img src="logo.svg" alt="الشعار"><div>من الزبير لكل مزاج</div><h1>وقتَك يستحق<br><span>قهوة تشبهك.</span></h1><p>قهوة مختارة، مشروبات منعشة، مخبوزات يومية وحلويات تحضّر لحظتك على مهل.</p><div class="actions"><a class="btn gold" href="#order">اطلب الآن ←</a><a class="btn" href="#menu">شاهد المنيو</a></div></div></section>
-<section id="about"><div class="wrap"><div class="heading"><label>OUR STORY</label><h2>أكثر من مجرد قهوة</h2><p>مساحة دافئة للقاءات الهادئة والأحاديث الجميلة.</p></div><div class="grid2"><div class="card"><h3>تجربة Café Nine</h3><p>في مقهى ناين نؤمن أن التفاصيل الصغيرة تصنع التجرب�� الكبيرة. جمعنا بين المذاق المميز، التقديم الأنيق، والأجواء المريحة.</p><a class="btn" href="#menu">اكتشف اختياراتنا</a></div><div class="about-image"></div></div></div></section>
-<section style="padding-top:0"><div class="wrap features"><div class="feature"><i>☕</i><h3>قهوة مختارة</h3><p>مذاق متوازن</p></div><div class="feature"><i>🥐</i><h3>مخبوزات يومية</h3><p>طازجة كل يوم</p></div><div class="feature"><i>🍹</i><h3>مشروبات منعشة</h3><p>موهيتو وسموذي</p></div><div class="feature"><i>🍰</i><h3>حلويات مميزة</h3><p>اختيارات شهية</p></div></div></section>
-<section class="menu" id="menu"><div class="wrap"><div class="heading"><label>CAFÉ NINE MENU</label><h2>قائمة تتبدّل مع مزاجك.</h2><p>اختر صنفك وأضفه إلى السلة.</p></div><div class="filters" id="filters"></div><div class="items" id="items"></div></div></section>
-<section class="order" id="order"><div class="card"><div class="heading" style="text-align:right"><label>ONLINE ORDER</label><h2>اطلب من Café Nine</h2><p>أرسل طلبك إلى واتساب المقهى بعد التأكيد.</p></div><form id="orderForm"><div class="row"><label class="field">الاسم<input id="name" required></label><label class="field">الهاتف<input id="phone" type="tel" required></label></div><label class="field">العنوان<textarea id="address" required rows="3"></textarea></label><div class="location"><b>تحديد موقع التوصيل</b><div><button class="btn" id="locate" type="button">📍 استخدام موقعي</button><a class="btn gold hidden" id="mapLink" target="_blank">فتح الموقع</a></div><div class="status" id="locStatus">اختياري — يساعدنا على الوصول بدقة.</div><input id="mapUrl" type="hidden"></div><label class="field">ملاحظات<textarea id="notes" rows="2"></textarea></label><div class="pay"><b>طريقة الدفع</b><label><input type="radio" name="payment" value="cash" checked> الدفع عند الاستلام</label><label><input type="radio" name="payment" value="card"> الدفع الإلكتروني بالبطاقة</label><small id="cardNotice" class="hidden">يتطلب رابط بوابة دفع حقيقية من إدارة المقهى.</small></div><div class="total"><span>الإجمالي</span><strong id="total">0 IQD</strong></div><button class="btn" type="submit">تأكيد وإرسال الطلب عبر و��تساب</button></form></div><aside class="card cart"><h2>سلة الطلب <span id="count">0</span></h2><div class="cartlist" id="cart"></div><div class="total"><span>الإجمالي</span><strong id="cartTotal">0 IQD</strong></div></aside></section>
-<section id="instagram"><div class="wrap"><div class="heading"><label>FROM INSTAGRAM</label><h2>من أجواء ناين</h2></div><div class="social"><article><div class="photo"></div><div class="body"><h3>حلوياتنا اليومية</h3><p>تفاصيل شهية مع قهوتك.</p><a href="https://www.instagram.com/reel/DdJwB0PNyvP/" target="_blank">مشاهدة الريل ←</a></div></article><article><div class="photo"></div><div class="body"><h3>مشروبات منعشة</h3><p>موهيتو باشن فروت.</p><a href="https://www.instagram.com/p/Dcx4-fBNySj/" target="_blank">مشاهدة المنشور ←</a></div></article><article><div class="photo"></div><div class="body"><h3>المخبوزات اليومية</h3><p>كرواسون ومخبوزات طازجة.</p><a href="https://www.instagram.com/reel/DcwA4VZM3YT/" target="_blank">مشاهدة الريل ←</a></div></article></div></div></section>
-<section class="visit" id="visit"><div class="wrap grid2"><div class="card"><h2>زورونا في Café Nine</h2><p>الزبير، محلة الشمال، شارع الشنقيطي</p><p>الهاتف: 07777900911</p><div class="actions"><a class="btn" href="tel:07777900911">اتصال</a><a class="btn" href="https://wa.me/9647777900911" target="_blank">واتساب</a></div></div><div class="map"><div><h2 style="color:#fff">نلتقيكم في الزبير</h2><p>محل�� الشمال، شارع الشنقيطي</p><a class="btn gold" href="https://maps.app.goo.gl/EUFKaV54Pa2iCMuj7?g_st=atm" target="_blank">فتح الخريطة</a></div></div></div></section></main>
-<footer><div class="wrap foot"><div><img src="logo.svg" alt="Café Nine"> Café Nine</div><small>© 2026 Café Nine — جميع الحقوق محفوظة</small></div></footer>
-<script>
-const cats=[['all','الكل'],['frappe','فرابيه'],['mojito','موهيتو'],['smoothie','سموذي'],['bakery','مخبوزات'],['desserts','حلويات'],['juice','عصائر'],['hot','ساخنة'],['cold','باردة'],['tea','شاي'],['addons','إضافات']];
-const raw=[['frappe','فانيلا','Vanilla','6000'],['frappe','جوكليت','Chocolate','6000'],['frappe','لوتس','Lotus','6000'],['frappe','فستق','Pistachio','6000'],['frappe','فراولة','Strawberry','6000'],['mojito','ليمون ونعناع','Classic lemon & mint','5000'],['mojito','تفاح أخضر','Green apple','5000'],['mojito','خوخ','Peach','5000'],['mojito','بلو كوراساو','Blue curacao','5000'],['mojito','باشن فروت','Passion fruit','5000'],['mojito','روز بيري','Roseberry','5000'],['smoothie','مانكا','Mango','5500'],['smoothie','فراولة','Strawberry','5500'],['smoothie','توت مشكل','Mixed berries','5500'],['smoothie','كيوي','Kiwi','5500'],['smoothie','خوخ باشن','Peach passion','5500'],['smoothie','أناناس وجوز الهند','Pineapple coconut','5500'],['bakery','كرواسان سادة','Plain croissant','2500'],['bakery','كرواسان بالجوكليت','Chocolate croissant','3500'],['bakery','كرواسان باللوتس','Lotus croissant','3500'],['bakery','كرواسان بالفستق','Pistachio croissant','3500'],['desserts','كيك بالجبن','Cheese cake','5500'],['desserts','سان سباستيان','San Sebastian','5500'],['desserts','رد فيلفت','Red velvet cake','5000'],['desserts','حلى طبقات','Layered dessert','4500'],['desserts','كيك إنكليزي','English cake','3000'],['desserts','إكلير','Eclair','3500'],['juice','برتقال','Orange','4000'],['juice','ليمون بالنعناع','Lemon with mint','4000'],['hot','اسبريسو','Espresso','3000'],['hot','دبل اسبريسو','Double espresso','4000'],['hot','قهوة تركية','Turkish coffee','3000'],['hot','امريكانو','Americano','4000'],['hot','كورتادو','Cortado','4500'],['hot','فلات وايت','Flat white','4500'],['hot','كابوتشينو','Cappuccino','4500'],['hot','لاتيه','Latte','5000'],['hot','فانيلا لاتيه','Vanilla latte','5000'],['hot','هيل لاتيه','Cardamom latte','5500'],['hot','كارامل مالح لاتيه','Salted caramel latte','5500'],['hot','سبانش لاتيه','Spanish latte','5000'],['hot','فستق لاتيه','Pistachio latte','6000'],['hot','كارامل ماكياتو','Caramel macchiato','5500'],['hot','موكا','Mocha','5000'],['hot','وايت موكا','White mocha','5000'],['hot','هوت جوكليت','Hot chocolate','4000'],['cold','امريكانو','Americano','4000'],['cold','لاتيه','Latte','5000'],['cold','فانيلا لاتيه','Vanilla latte','5000'],['cold','هيل لاتيه','Cardamom latte','5500'],['cold','كارامل مالح لاتيه','Salted caramel latte','5500'],['cold','سبانش لاتيه','Spanish latte','5000'],['cold','فستق لاتيه','Pistachio latte','6000'],['cold','فراولة لاتيه','Strawberry latte','5500'],['cold','كارامل ماكياتو لاتيه','Caramel macchiato latte','5500'],['cold','موكا','Mocha','5000'],['cold','وايت موكا','White mocha','5000'],['tea','شاي عراقي','Iraqi tea','2000'],['tea','شاي نعناع','Mint tea','2500'],['tea','شاي أخضر','Green tea','2500'],['tea','شاي كرك','Karak tea','2500'],['tea','ماء','Water','500'],['addons','جرعة اسبريسو إضافية','Extra espresso shot','1000+'],['addons','حليب الجوز أو الشوفان','Oat / Almond milk','1000+'],['addons','سيراب إضافي','Extra syrup','500+'],['addons','صوص إضافي','Extra sauce','500+'],['addons','كريمة مخفوقة','Whipped cream','500+']];
-let menu=JSON.parse(localStorage.getItem('cn-menu')||'null')||raw.map((x,i)=>({id:i,c:x[0],a:x[1],e:x[2],p:x[3],img:''}));let cart=JSON.parse(localStorage.getItem('cn-cart')||'[]'),filter='all';const $=s=>document.querySelector(s),money=n=>Number(n).toLocaleString('en-US')+' IQD',save=()=>localStorage.setItem('cn-menu',JSON.stringify(menu));
-function filters(){ $('#filters').innerHTML=cats.map(x=>`<button class="filter ${filter==x[0]?'active':''}" data-f="${x[0]}">${x[1]}</button>`).join('') }function render(){filters();let list=menu.filter(x=>filter==='all'||x.c===filter);$('#items').innerHTML=list.map(x=>`<article class="item"><div class="placeholder">9</div><div class="itembody"><h3>${x.a}</h3><p>${x.e}</p><button class="add" data-id="${x.id}">أضف للسلة</button></div><b class="price">${money(parseInt(x.p))}</b></article>`).join('')||'<p style="color:white">لا توجد أصناف.</p>';renderCart()}function renderCart(){let total=0,count=0;$('#cart').innerHTML=cart.map(x=>{total+=x.p*x.q;count+=x.q;return`<div class="cartitem"><div class="cartpic">9</div><div><strong>${x.a}</strong><small>${money(x.p*x.q)}</small><div class="qty"><button data-q="-1" data-id="${x.id}">−</button> ${x.q} <button data-q="1" data-id="${x.id}">+</button></div></div><button class="remove" data-remove="${x.id}">×</button></div>`}).join('')||'<div class="status">السلة فارغة.</div>';$('#total').textContent=money(total);$('#cartTotal').textContent=money(total);$('#count').textContent=count}$('#filters').addEventListener('click',e=>{if(e.target.dataset.f){filter=e.target.dataset.f;render()}});$('#items').addEventListener('click',e=>{let id=+e.target.dataset.id;if(!Number.isNaN(id)){let x=menu.find(i=>i.id===id),c=cart.find(i=>i.id===id);c?c.q++:cart.push({id:x.id,a:x.a,p:parseInt(x.p),q:1});localStorage.setItem('cn-cart',JSON.stringify(cart));renderCart();$('#order').scrollIntoView({behavior:'smooth'})}});$('#cart').addEventListener('click',e=>{let id=+e.target.dataset.id;if(e.target.dataset.q){let x=cart.find(i=>i.id===id);x.q+=+e.target.dataset.q;if(x.q<1)cart=cart.filter(i=>i.id!==id)}if(e.target.dataset.remove)cart=cart.filter(i=>i.id!==+e.target.dataset.remove);localStorage.setItem('cn-cart',JSON.stringify(cart));renderCart()});$('#locate').onclick=()=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{let u=`https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;$('#mapUrl').value=u;$('#mapLink').href=u;$('#mapLink').classList.remove('hidden');$('#locStatus').textContent='تم تحديد موقعك بنجاح.'},()=>$('#locStatus').textContent='تعذر تحديد الموقع.') : alert('المتصفح لا يدعم تحديد الموقع.');document.querySelectorAll('input[name=payment]').forEach(x=>x.onchange=()=>$('#cardNotice').classList.toggle('hidden',x.value!=='card'||!x.checked));$('#orderForm').onsubmit=e=>{e.preventDefault();if(!cart.length)return alert('السلة فارغة.');let pay=document.querySelector('input[name=payment]:checked').value;if(pay==='card')return alert('أضف رابط بوابة الدفع الحقيق��ة في الكود أولاً.');let msg=['طلب جديد من Café Nine','الاسم: '+$('#name').value,'الهاتف: '+$('#phone').value,'العنوان: '+$('#address').value,'موقع العميل: '+($('#mapUrl').value||'غير محدد'),'طريقة الدفع: الدفع عند الاستلام','','الأصناف:',...cart.map(x=>`${x.a} × ${x.q} = ${money(x.p*x.q)}`),'','الإجمالي: '+$('#cartTotal').textContent,'الملاحظات: '+($('#notes').value||'لا توجد')].join('\n');window.open('https://wa.me/9647777900911?text='+encodeURIComponent(msg),'_blank')};render();
-</script></body></html>
+  <div class="top-strip">أهلاً بكم في Café Nine — الزبير، محلة الشمال</div>
+
+  <header>
+    <div class="container nav">
+      <a class="brand" href="#home">
+        <img src="logo.svg" alt="شعار Café Nine" />
+        <span>
+          Café Nine
+          <small>COFFEE &amp; MORE</small>
+        </span>
+      </a>
+
+      <nav class="links">
+        <a href="#about">عن المقهى</a>
+        <a href="#menu">المنيو</a>
+        <a href="#order">اطلب الآن</a>
+        <a href="#instagram">أجواؤنا</a>
+        <a href="#visit">موقعنا</a>
+      </nav>
+
+      <a class="btn" href="https://www.instagram.com/cafenine.iq/" target="_blank" rel="noopener noreferrer">إنستغرام</a>
+    </div>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="container inner">
+        <img class="hero-logo" src="logo.svg" alt="شعار مقهى ناين" />
+        <div class="hero-kicker">من الزبير لكل مزاج</div>
+        <h1>وقتَك يستحق<br><span>قهوة تشبهك.</span></h1>
+        <p>صباحاتك اليومية للقهوة الباردة، المشروبات المنعشة والحلويات التي تحضّر لحظتك على مهل.</p>
+        <div class="hero-actions">
+          <a class="btn gold" href="#order">اطلب الآن ←</a>
+          <a class="btn" href="#menu">شاهد المنيو</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="container">
+        <div class="section-heading">
+          <label>OUR STORY</label>
+          <h2>أكثر من مجرد قهوة</h2>
+          <p>مساحة دافئة للقاءات الهادئة، الأحاديث الجميلة، والاستمتاع بمشروبك المفضل.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="card">
+            <h3>تجربة Café Nine</h3>
+            <p>في مقهى ناين نؤمن أن التفاصيل الصغيرة تصنع التجربة الكبيرة. جمعنا بين المذاق المميز، التقديم الأنيق، والأجواء المريحة لنمنحك لحظة تستحق التكرار.</p>
+            <a class="primary-btn" href="#menu">اكتشف اختياراتنا</a>
+          </div>
+          <div class="about-image"></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="container features">
+        <div class="feature">
+          <i>☕</i>
+          <h3>قهوة مختارة</h3>
+          <p>مشروبات ساخنة وباردة بمذاق متوازن.</p>
+        </div>
+        <div class="feature">
+          <i>🥐</i>
+          <h3>مخبوزات يومية</h3>
+          <p>كرواسون ومخبوزات طازجة كل يوم.</p>
+        </div>
+        <div class="feature">
+          <i>🍹</i>
+          <h3>مشروبات منعشة</h3>
+          <p>موهيتو وسموذي وعصائر طازجة.</p>
+        </div>
+        <div class="feature">
+          <i>🍰</i>
+          <h3>حلويات مميزة</h3>
+          <p>اختيارات مناسبة مع قهوتك المفضلة.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="menu-section" id="menu">
+      <div class="container">
+        <div class="section-heading">
+          <label>CAFÉ NINE MENU</label>
+          <h2>قائمة تتبدّل مع مزاجك.</h2>
+          <p>اختر صنفك وأضفه إلى السلة.</p>
+        </div>
+
+        <div id="filters" class="filters"></div>
+        <div id="menuGrid" class="menu-grid"></div>
+      </div>
+    </section>
+
+    <section class="order-section" id="order">
+      <div class="container order-layout">
+        <div class="card">
+          <div class="section-heading" style="text-align: right; margin-bottom: 20px;">
+            <label>ONLINE ORDER</label>
+            <h2>اطلب من Café Nine</h2>
+            <p>اختر أصنافك، ثم أرسل الطلب إلى واتساب المقهى.</p>
+          </div>
+
+          <form id="orderForm" class="order-form">
+            <div class="row">
+              <label class="field">
+                الاسم الكامل
+                <input id="customerName" type="text" placeholder="اكتب اسمك" required />
+              </label>
+
+              <label class="field">
+                رقم الهاتف
+                <input id="customerPhone" type="tel" placeholder="07xxxxxxxxx" required />
+              </label>
+            </div>
+
+            <label class="field">
+              عنوان التوصيل أو الاستلام
+              <textarea id="customerAddress" rows="3" placeholder="اكتب العنوان أو: استلام من المقهى" required></textarea>
+            </label>
+
+            <div class="location-box">
+              <strong>تحديد موقع التوصيل</strong>
+              <div class="location-actions">
+                <button class="btn" type="button" id="getLocationButton">📍 استخدام موقعي الحالي</button>
+                <a id="openCustomerLocation" class="location-link hidden" href="#" target="_blank" rel="noopener noreferrer">فتح الموقع</a>
+              </div>
+              <div class="status" id="locationStatus">اختياري — يساعدنا على الوصول بدقة.</div>
+              <input type="hidden" id="customerMapUrl" />
+            </div>
+
+            <label class="field">
+              ملاحظات إضافية
+              <textarea id="orderNotes" rows="2" placeholder="مثال: بدون سكر..."></textarea>
+            </label>
+
+            <div class="payment-box">
+              <h3>طريقة الدفع</h3>
+
+              <label class="payment-option selected">
+                <input type="radio" name="paymentMethod" value="cash" checked />
+                <span>
+                  <strong>الدفع عند الاستلام</strong>
+                  <small>ادفع نقدًا عند استلام الطلب.</small>
+                </span>
+              </label>
+
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="card" />
+                <span>
+                  <strong>الدفع الإلكتروني بالبطاقة</strong>
+                  <small>سيتم تحويلك إلى بوابة الدفع.</small>
+                </span>
+              </label>
+
+              <div id="cardNotice" class="card-notice hidden">
+                الدفع الإلكتروني يحتاج إلى رابط بوابة دفع حقيقية من إدارة المقهى.
+              </div>
+            </div>
+
+            <div class="summary">
+              <span>الإجمالي</span>
+              <strong id="orderTotal">0 IQD</strong>
+            </div>
+
+            <button class="send-btn" type="submit">تأكيد وإرسال الطلب عبر واتساب</button>
+            <div class="order-disclaimer">سيتم إرسال تفاصيل الطلب إلى رقم واتساب المقهى.</div>
+          </form>
+        </div>
+
+        <aside class="card cart-card">
+          <div class="cart-head">
+            <div>
+              <span style="font-size:12px;color:var(--brown);font-weight:800;">YOUR ORDER</span>
+              <h2 style="margin:8px 0 0;">سلة الطلب</h2>
+            </div>
+            <span class="cart-count" id="cartCount">0</span>
+          </div>
+
+          <div id="cartItems" class="cart-items"></div>
+
+          <div class="cart-total">
+            <span>الإجمالي</span>
+            <strong id="cartTotal">0 IQD</strong>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="instagram">
+      <div class="container">
+        <div class="section-heading">
+          <label>FROM INSTAGRAM</label>
+          <h2>من أجواء ناين</h2>
+          <p>تابعوا آخر المشروبات والمخبوزات والعروض من حسابنا الرسمي.</p>
+        </div>
+
+        <div class="social-grid">
+          <article class="social-card">
+            <div class="social-photo"></div>
+            <div class="social-body">
+              <h3>حلوياتنا اليومية</h3>
+              <p>تفاصيل شهية ومذاقات مناسبة مع قهوتك.</p>
+              <a href="https://www.instagram.com/reel/DdJwB0PNyvP/" target="_blank" rel="noopener noreferrer">مشاهدة الريل ←</a>
+            </div>
+          </article>
+
+          <article class="social-card">
+            <div class="social-photo"></div>
+            <div class="social-body">
+              <h3>مشروبات منعشة</h3>
+              <p>موهيتو باشن فروت ومشروبات مختارة.</p>
+              <a href="https://www.instagram.com/p/Dcx4-fBNySj/" target="_blank" rel="noopener noreferrer">مشاهدة المنشور ←</a>
+            </div>
+          </article>
+
+          <article class="social-card">
+            <div class="social-photo"></div>
+            <div class="social-body">
+              <h3>المخبوزات اليومية</h3>
+              <p>كرواسون ومخبوزات طازجة بأجواء ناين.</p>
+              <a href="https://www.instagram.com/reel/DcwA4VZM3YT/" target="_blank" rel="noopener noreferrer">مشاهدة الريل ←</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="visit-section" id="visit">
+      <div class="container visit-grid">
+        <div class="card contact-card">
+          <h2>زورونا في Café Nine</h2>
+          <p>نحن بانتظاركم لقضاء وقت هادئ مع مشروبكم المفضل.</p>
+
+          <div class="meta">
+            <div class="meta-icon">📍</div>
+            <div>
+              <strong>العنوان</strong>
+              <span>الزبير، محلة الشمال، شارع الشنقيطي</span>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="meta-icon">☎</div>
+            <div>
+              <strong>الهاتف</strong>
+              <span>07777900911</span>
+            </div>
+          </div>
+
+          <div class="meta">
+            <div class="meta-icon">◎</div>
+            <div>
+              <strong>إنستغرام</strong>
+              <span>@cafenine.iq</span>
+            </div>
+          </div>
+
+          <div class="contact-actions">
+            <a class="btn" href="tel:07777900911">اتصال مباشر</a>
+            <a class="btn" href="https://wa.me/9647777900911" target="_blank" rel="noopener noreferrer">واتساب</a>
+          </div>
+        </div>
+
+        <div class="map-card">
+          <div>
+            <h3>نلتقيكم في الزبير</h3>
+            <p>محلة الشمال، شارع الشنقيطي</p>
+            <a class="btn gold" href="https://maps.app.goo.gl/EUFKaV54Pa2iCMuj7?g_st=atm" target="_blank" rel="noopener noreferrer">فتح الموقع على الخريطة</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="شعار Café Nine" />
+        <span>Café Nine</span>
+      </div>
+      <div class="copyright">© 2026 Café Nine — جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = "https://esvvealfrdvfmwmyeyed.supabase.co";
+    const supabaseKey = "sb_publishable_22734JdUdH_lzfoyebadsw_OlegCH9K";
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const menuCategories = {
+      all: "الكل",
+      frappe: "فرابيه",
+      mojito: "موهيتو",
+      smoothie: "سموذي",
+      bakery: "مخبوزات",
+      desserts: "حلويات",
+      juice: "عصائر",
+      hot: "مشروبات ساخنة",
+      cold: "مشروبات باردة",
+      tea: "شاي",
+      addons: "إضافات"
+    };
+
+    let selectedCategory = "all";
+    let menu = [];
+    let cart = JSON.parse(localStorage.getItem("cafe-nine-cart") || "[]");
+
+    function formatIQD(value) {
+      return Number(value || 0).toLocaleString("en-US") + " IQD";
+    }
+
+    function saveCart() {
+      localStorage.setItem("cafe-nine-cart", JSON.stringify(cart));
+    }
+
+    async function loadMenu() {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      menu = data || [];
+      renderFilters();
+      renderMenu();
+      renderCart();
+    }
+
+    function renderFilters() {
+      const filtersEl = document.getElementById("filters");
+      if (!filtersEl) return;
+
+      filtersEl.innerHTML = Object.entries(menuCategories).map(([key, label]) => {
+        return `
+          <button
+            type="button"
+            class="filter ${selectedCategory === key ? "active" : ""}"
+            data-filter="${key}"
+          >
+            ${label}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderMenu() {
+      const menuGrid = document.getElementById("menuGrid");
+      if (!menuGrid) return;
+
+      const visible = selectedCategory === "all"
+        ? menu
+        : menu.filter(item => item.category === selectedCategory);
+
+      if (!visible.length) {
+        menuGrid.innerHTML = `<div class="empty-state">لا توجد أصناف في هذه الفئة.</div>`;
+        return;
+      }
+
+      menuGrid.innerHTML = visible.map(item => `
+        <article class="menu-item">
+          <div class="item-image">
+            ${item.image ? `<img src="${item.image}" alt="${item.arabic}" />` : "9"}
+          </div>
+
+          <div class="item-body">
+            <h3>${item.arabic}</h3>
+            <p>${item.english}</p>
+            <button type="button" class="add-to-cart" data-id="${item.id}">أضف للسلة</button>
+          </div>
+
+          <div class="price">${formatIQD(item.price)}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderCart() {
+      const cartEl = document.getElementById("cartItems");
+      const countEl = document.getElementById("cartCount");
+      const totalEl = document.getElementById("cartTotal");
+      if (!cartEl || !countEl || !totalEl) return;
+
+      const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+      const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+      countEl.textContent = count;
+      totalEl.textContent = formatIQD(total);
+
+      if (!cart.length) {
+        cartEl.innerHTML = `
+          <div class="empty-cart">
+            <div>🛒</div>
+            <strong>السلة فارغة</strong>
+            <span>أضف أصنافًا من المنيو للبدء.</span>
+          </div>
+        `;
+        return;
+      }
+
+      cartEl.innerHTML = cart.map(item => `
+        <div class="cart-item">
+          <div class="cart-thumb">
+            ${item.image ? `<img src="${item.image}" alt="${item.arabic}" />` : "9"}
+          </div>
+
+          <div class="cart-meta">
+            <strong>${item.arabic}</strong>
+            <small>${formatIQD(Number(item.price) * item.quantity)}</small>
+            <div class="qty">
+              <button type="button" data-qty="-1" data-id="${item.id}">−</button>
+              <span>${item.quantity}</span>
+              <button type="button" data-qty="1" data-id="${item.id}">+</button>
+            </div>
+          </div>
+
+          <button type="button" class="remove-item" data-remove="${item.id}">×</button>
+        </div>
+      `).join("");
+    }
+
+    document.addEventListener("click", (event) => {
+      const filterBtn = event.target.closest("[data-filter]");
+      if (filterBtn) {
+        selectedCategory = filterBtn.dataset.filter;
+        renderFilters();
+        renderMenu();
+        return;
+      }
+
+      const addBtn = event.target.closest(".add-to-cart");
+      if (addBtn) {
+        const id = Number(addBtn.dataset.id);
+        const item = menu.find(x => x.id === id);
+
+        if (!item) return;
+
+        const existing = cart.find(x => x.id === id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          cart.push({
+            id: item.id,
+            arabic: item.arabic,
+            english: item.english,
+            price: Number(item.price),
+            image: item.image || "",
+            quantity: 1
+          });
+        }
+
+        saveCart();
+        renderCart();
+        return;
+      }
+
+      const qtyBtn = event.target.closest("[data-qty]");
+      if (qtyBtn) {
+        const id = Number(qtyBtn.dataset.id);
+        const delta = Number(qtyBtn.dataset.qty);
+
+        cart = cart
+          .map(item => item.id === id ? { ...item, quantity: item.quantity + delta } : item)
+          .filter(item => item.quantity > 0);
+
+        saveCart();
+        renderCart();
+        return;
+      }
+
+      const removeBtn = event.target.closest("[data-remove]");
+      if (removeBtn) {
+        const id = Number(removeBtn.dataset.remove);
+        cart = cart.filter(item => item.id !== id);
+        saveCart();
+        renderCart();
+      }
+    });
+
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        document.querySelectorAll(".payment-option").forEach(option => {
+          const checked = option.querySelector("input").checked;
+          option.classList.toggle("selected", checked);
+        });
+
+        const notice = document.getElementById("cardNotice");
+        if (notice) notice.classList.toggle("hidden", radio.value !== "card" || !radio.checked);
+      });
+    });
+
+    document.getElementById("getLocationButton")?.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        alert("المتصفح لا يدعم تحديد الموقع.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition((position) => {
+        const url = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
+        const input = document.getElementById("customerMapUrl");
+        const link = document.getElementById("openCustomerLocation");
+        const status = document.getElementById("locationStatus");
+
+        if (input) input.value = url;
+        if (link) {
+          link.href = url;
+          link.classList.remove("hidden");
+        }
+
+        if (status) status.textContent = "تم تحديد موقعك بنجاح.";
+      }, () => {
+        const status = document.getElementById("locationStatus");
+        if (status) status.textContent = "تعذر تحديد الموقع. حاول مرة أخرى.";
+      });
+    });
+
+    document.getElementById("orderForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      if (!cart.length) {
+        alert("السلة فارغة. أضف صنفًا واحدًا على الأقل.");
+        return;
+      }
+
+      const customerName = document.getElementById("customerName")?.value.trim();
+      const customerPhone = document.getElementById("customerPhone")?.value.trim();
+      const customerAddress = document.getElementById("customerAddress")?.value.trim();
+      const notes = document.getElementById("orderNotes")?.value.trim();
+      const mapUrl = document.getElementById("customerMapUrl")?.value.trim() || "لم يتم تحديد الموقع";
+
+      if (!customerName || !customerPhone || !customerAddress) {
+        alert("يرجى إدخال الاسم والهاتف والعنوان.");
+        return;
+      }
+
+      const selected = document.querySelector('input[name="paymentMethod"]:checked')?.value || "cash";
+      if (selected === "card") {
+        alert("الدفع الإلكتروني يحتاج إلى رابط بوابة دفع حقيقية من إدارة المقهى.");
+        return;
+      }
+
+      const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+      const lines = cart.map((item, index) => {
+        return `${index + 1}. ${item.arabic} — الكمية: ${item.quantity} — ${formatIQD(Number(item.price) * item.quantity)}`;
+      }).join("\n");
+
+      const message = [
+        "طلب جديد من موقع Café Nine",
+        "----------------------------",
+        `الاسم: ${customerName}`,
+        `الهاتف: ${customerPhone}`,
+        `العنوان: ${customerAddress}`,
+        `موقع العميل: ${mapUrl}`,
+        `طريقة الدفع: الدفع عند الاستلام`,
+        "",
+        "الأصناف:",
+        lines,
+        "",
+        `الإجمالي: ${formatIQD(total)}`,
+        `ملاحظات: ${notes || "لا توجد"}`
+      ].join("\n");
+
+      window.open(`https://wa.me/9647777900911?text=${encodeURIComponent(message)}`, "_blank");
+
+      cart = [];
+      saveCart();
+      renderCart();
+      event.target.reset();
+    });
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      renderFilters();
+      renderMenu();
+      renderCart();
+      await loadMenu();
+    });
+  </script>
+</body>
+</html>
