@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة إدارة Café Nine</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="loginView" class="login-card">
+    <h1>Café Nine</h1>
+    <p>تسجيل الدخول إلى لوحة الإدارة</p>
+
+    <form id="loginForm">
+      <label>
+        البريد الإلكتروني
+        <input id="email" type="email" placeholder="admin@cafenine.com" required />
+      </label>
+
+      <label>
+        كلمة المرور
+        <input id="password" type="password" placeholder="••••••••" required />
+      </label>
+
+      <button type="submit">تسجيل الدخول</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </div>
+
+  <div id="adminView" class="admin-panel">
+    <div class="top-bar">
+      <h2>لوحة إدارة Café Nine</h2>
+      <button class="logout-btn" id="logoutButton">تسجيل الخروج</button>
+    </div>
+
+    <div class="admin-grid">
+      <div class="card">
+        <h3>إضافة صنف</h3>
+        <p>أضف صنفًا جديدًا إلى المنيو</p>
+        <input id="adminArabic" type="text" placeholder="اسم الصنف بالعربي" />
+        <input id="adminEnglish" type="text" placeholder="اسم الصنف بالإنجليزي" />
+        <input id="adminPrice" type="text" placeholder="السعر: 5000 IQD" />
+        <select id="adminCategory">
+          <option value="frappe">فرابيه</option>
+          <option value="mojito">موهيتو</option>
+          <option value="smoothie">سموذي</option>
+          <option value="bakery">مخبوزات</option>
+          <option value="desserts">حلويات</option>
+          <option value="juice">عصائر</option>
+          <option value="hot">مشروبات ساخنة</option>
+          <option value="cold">مشروبات باردة</option>
+          <option value="tea">شاي</option>
+          <option value="addons">إضافات</option>
+        </select>
+        <button type="button" id="addMenuItemBtn">إضافة صنف</button>
+      </div>
+
+      <div class="card">
+        <h3>معاينة المنيو</h3>
+        <p>هذه الصفحة تفتح فقط بعد تسجيل الدخول.</p>
+        <button type="button" id="openSiteBtn">فتح الموقع العام</button>
+        <button type="button" id="exportBtn">تصدير المنيو</button>
+      </div>
+    </div>
+
+    <div class="note">
+      هذا مثال تجريبي سريع. للحصول على نظام آمن بالكامل، استخدم Supabase أو Firebase.
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
