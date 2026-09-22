@@ -1,5 +1,392 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة إدارة Café Nine</title><style>body{margin:0;background:#f7f4ec;font-family:Arial;color:#17211f}.card{width:min(1000px,calc(100% - 28px));margin:30px auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 12px 35px #043b3615}input,select,button{width:100%;padding:11px;margin:6px 0;border:1px solid #dfe8e2;border-radius:10px;box-sizing:border-box}button{background:#075951;color:#fff;border:0;cursor:pointer;font-weight:bold}.hidden{display:none}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.box{border:1px solid #dfe8e2;border-radius:15px;padding:16px}.row{border-bottom:1px solid #edf2ef;padding:12px 0}.danger{background:#b87558;width:auto;padding:7px 12px}.status{padding:5px;border-radius:8px;font-size:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head><body>
-<div id="login" class="card"><h1>Café Nine</h1><p>تسجيل الدخول إلى لوحة الإدارة</p><form id="loginForm"><input id="email" type="email" placeholder="البريد الإلكتروني" required><input id="password" type="password" placeholder="كلمة المرور" required><button>تسجيل الدخول</button><p id="loginError"></p></form></div>
-<div id="panel" class="card hidden"><div style="display:flex;justify-content:space-between;align-items:center"><h1>لوحة الإدارة</h1><button id="logout" style="width:auto;background:#b87558">خروج</button></div><div class="grid"><div class="box"><h2>الطلبات الواردة</h2><button id="refreshOrders">تحديث الطلبات</button><div id="orders"></div></div><div class="box"><h2>إضافة صنف</h2><input id="arabic" placeholder="اسم الصنف بالعربي"><input id="english" placeholder="الاسم بالإنجليزي"><input id="price" placeholder="السعر"><select id="category"><option value="frappe">فرابيه</option><option value="mojito">موهيتو</option><option value="smoothie">سموثي</option><option value="bakery">مخبوزات</option><option value="desserts">حلويات</option><option value="juice">عصائر</option><option value="hot">ساخنة</option><option value="cold">باردة</option><option value="tea">شاي</option><option value="addons">إضافات</option></select><input id="image" placeholder="رابط الصورة اختياري"><button id="addItem">إضافة الصنف</button><h2>الأصناف</h2><div id="menu"></div></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>const db=window.supabase.createClient('https://esvvealfrdvfmwmyeyed.supabase.co','sb_publishable_22734JdUdH_lzfoyebadsw_OlegCH9K');const $=s=>document.querySelector(s);function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function show(){('#login');$('#login').classList.add('hidden');$('#panel').classList.remove('hidden');loadOrders();loadMenu()}async function loadOrders(){const {data,error}=await db.from('orders').select('*').order('created_at',{ascending:false});$('#orders').innerHTML=error?'<p>شغّل orders-schema.sql أولًا.</p>':(data||[]).map(o=>`<div class="row"><b>${esc(o.customer_name)} — ${esc(o.customer_phone)}</b><br><small>${new Date(o.created_at).toLocaleString('ar-IQ')}</small><p>${esc(o.address)}</p><p>${(o.items||[]).map(x=>`${esc(x.name)} × ${x.quantity}`).join('، ')}</p><b>${Number(o.total).toLocaleString()} IQD</b><select data-status="${o.id}"><option value="new" ${o.status==='new'?'selected':''}>جديد</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>مؤكد</option><option value="preparing" ${o.status==='preparing'?'selected':''}>قيد التحضير</option><option value="ready" ${o.status==='ready'?'selected':''}>جاهز</option><option value="delivered" ${o.status==='delivered'?'selected':''}>تم التسليم</option><option value="cancelled" ${o.status==='cancelled'?'selected':''}>ملغى</option></select>${o.map_url?`<a href="${esc(o.map_url)}" target="_blank">📍 فتح موقع الزبون</a>`:''}</div>`).join('')||'<p>لا توجد طلبات.</p>'}async function loadMenu(){const {data}=await db.from('menu_items').select('*').order('created_at',{ascending:true});$('#menu').innerHTML=(data||[]).map(x=>`<div class="row"><b>${esc(x.arabic)}</b> — ${Number(x.price).toLocaleString()} IQD<br><button class="danger" data-delete="${x.id}">حذف</button></div>`).join('')}$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const {error}=await db.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});if(error)return $('#loginError').textContent='بيانات الدخول غير صحيحة';show()});$('#logout').onclick=async()=>{await db.auth.signOut();location.reload()};$('#refreshOrders').onclick=loadOrders;$('#orders').addEventListener('change',async e=>{if(e.target.dataset.status)await db.from('orders').update({status:e.target.value}).eq('id',e.target.dataset.status)});$('#addItem').onclick=async()=>{const payload={arabic:$('#arabic').value.trim(),english:$('#english').value.trim(),price:$('#price').value.trim(),category:$('#category').value,image:$('#image').value.trim()||null};if(!payload.arabic||!payload.english||!payload.price)return alert('أكمل البيانات');const {error}=await db.from('menu_items').insert(payload);if(error)return alert('تعذر إضافة الصنف');['arabic','english','price','image'].forEach(id=>$('#'+id).value='');loadMenu()};$('#menu').addEventListener('click',async e=>{if(e.target.dataset.delete){await db.from('menu_items').delete().eq('id',e.target.dataset.delete);loadMenu()}});db.auth.getSession().then(({data})=>{if(data.session)show()});</script></body></html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة إدارة Café Nine</title>
+  <style>
+    :root{
+      --green:#075951;--dark:#043b36;--gold:#ead8ae;--cream:#f7f4ec;--muted:#68736e;--brown:#b87558;--line:#dfe8e2;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--cream);font-family:Arial,sans-serif;color:#17211f}
+    body{padding:20px}
+    a{text-decoration:none;color:inherit}
+    .wrap{width:min(1200px,calc(100% - 24px));margin:auto}
+    .card{
+      background:#fff;border-radius:20px;box-shadow:0 18px 42px rgba(4,59,54,.12);
+      border:1px solid var(--line);padding:20px
+    }
+    .hidden{display:none!important}
+    .login-box{
+      width:min(420px,100%);margin:80px auto;background:#fff;border-radius:22px;
+      padding:28px;border:1px solid var(--line);box-shadow:0 18px 42px rgba(4,59,54,.12)
+    }
+    h1,h2,h3,h4,p{margin:0}
+    .title{font-size:26px;color:var(--dark);margin-bottom:10px}
+    .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+    label{display:block;margin-top:14px;font-weight:700;color:var(--dark);font-size:14px}
+    input,select,button,textarea{width:100%;padding:12px 13px;border-radius:12px;border:1px solid #dfe9e3;font-size:14px}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(7,89,81,.08)}
+    button{background:var(--green);color:#fff;font-weight:700;border:none;cursor:pointer}
+    .secondary{background:var(--brown)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;background:#e7f5f0;color:var(--green);font-size:12px;font-weight:700
+    }
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+    .stat{padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .stat .num{font-size:28px;font-weight:800;color:var(--dark)}
+    .stat .lab{font-size:12px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1.3fr .7fr;gap:18px}
+    .box-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .orders, .menu-box{display:grid;gap:10px}
+    .order-item{
+      border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;
+    }
+    .order-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+    .order-meta{font-size:12px;color:var(--muted);}
+    .item-list{margin:8px 0;padding:0;list-style:none;color:#17211f;font-size:13px}
+    .item-list li{padding:4px 0;border-bottom:1px dashed #edf2ef}
+    .status-select{width:auto;min-width:160px;padding:9px 12px;background:#f8faf8;border:1px solid var(--line);border-radius:10px}
+    .menu-list{display:grid;gap:10px}
+    .menu-row{
+      border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;
+      display:flex;justify-content:space-between;align-items:center;gap:10px
+    }
+    .menu-row .left strong{display:block;color:var(--dark)}
+    .menu-row .left small{color:var(--muted)}
+    .small-btn{width:auto;padding:8px 12px;font-size:12px}
+    .danger{background:var(--brown)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .full{grid-column:1 / -1}
+    .alert{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13px}
+    .alert.error{background:#fef1f1;color:#8d2b2b}
+    .alert.success{background:#edf9f0;color:#1d6b46}
+    @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)} .grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.stats{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <div id="loginView" class="login-box">
+    <h1 class="title">Café Nine</h1>
+    <p class="sub">تسجيل الدخول إلى لوحة إدارة المقهى</p>
+
+    <form id="loginForm">
+      <label>البريد الإلكتروني
+        <input id="email" type="email" required placeholder="admin@cafenine.com" />
+      </label>
+
+      <label>كلمة المرور
+        <input id="password" type="password" required placeholder="••••••••" />
+      </label>
+
+      <button type="submit">تسجيل الدخول</button>
+      <div id="loginError" class="alert error hidden"></div>
+    </form>
+  </div>
+
+  <div id="adminView" class="wrap hidden">
+    <div class="toolbar">
+      <div>
+        <h1 class="title" style="font-size:26px">لوحة إدارة Café Nine</h1>
+      </div>
+      <div class="top-actions">
+        <span class="badge">Admin</span>
+        <button class="secondary" id="logoutBtn" type="button">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div id="newCount" class="num">0</div><div class="lab">جديد</div></div>
+      <div class="stat"><div id="confirmedCount" class="num">0</div><div class="lab">مؤكد</div></div>
+      <div class="stat"><div id="preparingCount" class="num">0</div><div class="lab">قيد التحضير</div></div>
+      <div class="stat"><div id="readyCount" class="num">0</div><div class="lab">جاهز</div></div>
+      <div class="stat"><div id="deliveredCount" class="num">0</div><div class="lab">تم التسليم</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="box-header">
+          <h2>الطلبات الواردة</h2>
+          <button id="refreshOrders" type="button" class="small-btn">تحديث</button>
+        </div>
+
+        <div id="ordersList" class="orders"></div>
+      </div>
+
+      <div class="card">
+        <div class="box-header">
+          <h2>إدارة المنيو</h2>
+          <button id="refreshMenu" type="button" class="small-btn">تحديث</button>
+        </div>
+
+        <div class="menu-box">
+          <div class="form-grid">
+            <input id="itemArabic" type="text" placeholder="اسم الصنف بالعربي" />
+            <input id="itemEnglish" type="text" placeholder="اسم الصنف بالإنجليزي" />
+            <input id="itemPrice" type="number" step="0.01" placeholder="السعر" />
+            <select id="itemCategory">
+              <option value="frappe">فرابيه</option>
+              <option value="mojito">موهيتو</option>
+              <option value="smoothie">سموذي</option>
+              <option value="bakery">مخبوزات</option>
+              <option value="desserts">حلويات</option>
+              <option value="juice">عصائر</option>
+              <option value="hot">مشروبات ساخنة</option>
+              <option value="cold">مشروبات باردة</option>
+              <option value="tea">شاي</option>
+              <option value="addons">إضافات</option>
+            </select>
+            <input id="itemImage" type="text" placeholder="رابط صورة الصنف (اختياري)" class="full" />
+            <button id="addMenuItem" type="button" class="full">إضافة صنف</button>
+          </div>
+          <div id="menuList" class="menu-list" style="margin-top:14px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = "https://esvvealfrdvfmwmyeyed.supabase.co";
+    const supabaseKey = "sb_publishable_22734JdUdH_lzfoyebadsw_OlegCH9K";
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const loginView = document.getElementById("loginView");
+    const adminView = document.getElementById("adminView");
+    const loginForm = document.getElementById("loginForm");
+    const loginError = document.getElementById("loginError");
+
+    function showMessage(type, text) {
+      const el = document.createElement("div");
+      el.className = "alert " + type;
+      el.textContent = text;
+      const target = document.getElementById("loginError");
+      if (target) target.innerHTML = "";
+      if (target) target.appendChild(el);
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        loginView.classList.add("hidden");
+        adminView.classList.remove("hidden");
+        await loadOrders();
+        await loadMenu();
+      }
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        loginError.classList.remove("hidden");
+        loginError.textContent = "البريد أو كلمة المرور غير صحيحة.";
+        return;
+      }
+
+      loginError.classList.add("hidden");
+      loginView.classList.add("hidden");
+      adminView.classList.remove("hidden");
+      await loadOrders();
+      await loadMenu();
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      loginView.classList.remove("hidden");
+      adminView.classList.add("hidden");
+    });
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("en-US") + " IQD";
+    }
+
+    async function loadOrders() {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      const ordersList = document.getElementById("ordersList");
+      if (!ordersList) return;
+
+      if (error) {
+        ordersList.innerHTML = '<div class="alert error">تعذر تحميل الطلبات.</div>';
+        return;
+      }
+
+      const counts = { new: 0, confirmed: 0, preparing: 0, ready: 0, delivered: 0 };
+      const items = data || [];
+
+      items.forEach(order => {
+        counts[order.status || "new"] = (counts[order.status || "new"] || 0) + 1;
+      });
+
+      document.getElementById("newCount").textContent = counts.new || 0;
+      document.getElementById("confirmedCount").textContent = counts.confirmed || 0;
+      document.getElementById("preparingCount").textContent = counts.preparing || 0;
+      document.getElementById("readyCount").textContent = counts.ready || 0;
+      document.getElementById("deliveredCount").textContent = counts.delivered || 0;
+
+      ordersList.innerHTML = items.length
+        ? items.map(order => `
+            <div class="order-item">
+              <div class="order-head">
+                <div>
+                  <h3>${order.customer_name}</h3>
+                  <div class="order-meta">${order.customer_phone}</div>
+                </div>
+                <select class="status-select" data-order-id="${order.id}" data-current-status="${order.status || "new"}">
+                  <option value="new" ${order.status === "new" ? "selected" : ""}>جديد</option>
+                  <option value="confirmed" ${order.status === "confirmed" ? "selected" : ""}>مؤكد</option>
+                  <option value="preparing" ${order.status === "preparing" ? "selected" : ""}>قيد التحضير</option>
+                  <option value="ready" ${order.status === "ready" ? "selected" : ""}>جاهز</option>
+                  <option value="delivered" ${order.status === "delivered" ? "selected" : ""}>تم التسليم</option>
+                  <option value="cancelled" ${order.status === "cancelled" ? "selected" : ""}>ملغى</option>
+                </select>
+              </div>
+
+              <div class="order-meta">
+                ${new Date(order.created_at).toLocaleString("ar-IQ")}
+              </div>
+
+              <div class="order-meta" style="margin-top:6px;">
+                العنوان: ${order.address || "غير محدد"}
+              </div>
+
+              ${order.map_url ? `<div class="order-meta" style="margin-top:6px;">
+                <a href="${order.map_url}" target="_blank" rel="noopener">فتح موقع الزبون</a>
+              </div>` : ""}
+
+              <ul class="item-list">
+                ${(order.items || []).map(item => `
+                  <li>
+                    ${item.name} × ${item.quantity} — ${formatMoney(item.subtotal || item.unit_price * item.quantity)}
+                  </li>
+                `).join("")}
+              </ul>
+
+              <div class="order-meta">الإجمالي: <strong style="color:#043b36">${formatMoney(order.total)}</strong></div>
+              <div class="order-meta" style="margin-top:6px;">ملاحظات: ${order.notes || "لا توجد"}</div>
+            </div>
+          `).join("")
+        : "<div class='alert error'>لا توجد طلبات حتى الآن.</div>";
+    }
+
+    async function loadMenu() {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      const menuList = document.getElementById("menuList");
+      if (!menuList) return;
+
+      if (error) {
+        menuList.innerHTML = '<div class="alert error">تعذر تحميل المنيو.</div>';
+        return;
+      }
+
+      menuList.innerHTML = (data || []).map(item => `
+        <div class="menu-row">
+          <div class="left">
+            <strong>${item.arabic}</strong>
+            <small>${item.english} — ${formatMoney(item.price)}</small>
+          </div>
+          <button class="danger small-btn" data-delete-id="${item.id}" type="button">حذف</button>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("refreshOrders").addEventListener("click", async () => {
+      await loadOrders();
+    });
+
+    document.getElementById("refreshMenu").addEventListener("click", async () => {
+      await loadMenu();
+    });
+
+    document.getElementById("addMenuItem").addEventListener("click", async () => {
+      const arabic = document.getElementById("itemArabic").value.trim();
+      const english = document.getElementById("itemEnglish").value.trim();
+      const price = Number(document.getElementById("itemPrice").value);
+      const category = document.getElementById("itemCategory").value;
+      const image = document.getElementById("itemImage").value.trim();
+
+      if (!arabic || !english || !price) {
+        alert("يرجى إدخال الاسم والسعر.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("menu_items")
+        .insert([{ arabic, english, price, category, image }]);
+
+      if (error) {
+        alert("تعذر إضافة الصنف.");
+        return;
+      }
+
+      document.getElementById("itemArabic").value = "";
+      document.getElementById("itemEnglish").value = "";
+      document.getElementById("itemPrice").value = "";
+      document.getElementById("itemCategory").value = "frappe";
+      document.getElementById("itemImage").value = "";
+
+      await loadMenu();
+    });
+
+    document.getElementById("menuList").addEventListener("click", async (event) => {
+      const target = event.target.closest("[data-delete-id]");
+      if (!target) return;
+
+      const id = target.getAttribute("data-delete-id");
+
+      const { error } = await supabase
+        .from("menu_items")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert("تعذر حذف الصنف.");
+        return;
+      }
+
+      await loadMenu();
+    });
+
+    document.getElementById("ordersList").addEventListener("change", async (event) => {
+      const target = event.target.closest(".status-select");
+      if (!target) return;
+
+      const orderId = target.dataset.orderId;
+      const newStatus = target.value;
+
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+
+      if (error) {
+        alert("تعذر تحديث حالة الطلب.");
+        return;
+      }
+
+      await loadOrders();
+    });
+
+    checkSession();
+  </script>
+</body>
+</html>
