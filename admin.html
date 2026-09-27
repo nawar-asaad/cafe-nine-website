@@ -152,7 +152,7 @@
   <script>
     const supabaseUrl = "https://esvvealfrdvfmwmyeyed.supabase.co";
     const supabaseKey = "sb_publishable_22734JdUdH_lzfoyebadsw_OlegCH9K";
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const loginView = document.getElementById("loginView");
     const adminView = document.getElementById("adminView");
@@ -169,7 +169,7 @@
     }
 
     async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await db.auth.getSession();
       if (session) {
         loginView.classList.add("hidden");
         adminView.classList.remove("hidden");
@@ -184,7 +184,7 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await db.auth.signInWithPassword({
         email,
         password
       });
@@ -203,17 +203,25 @@
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await supabase.auth.signOut();
+      await db.auth.signOut();
       loginView.classList.remove("hidden");
       adminView.classList.add("hidden");
     });
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+    }
+
+    function safeUrl(value) {
+      return /^https:\/\//i.test(String(value || "")) ? escapeHtml(value) : "";
+    }
 
     function formatMoney(value) {
       return Number(value || 0).toLocaleString("en-US") + " IQD";
     }
 
     async function loadOrders() {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("orders")
         .select("*")
         .order("created_at", { ascending: false });
@@ -244,10 +252,10 @@
             <div class="order-item">
               <div class="order-head">
                 <div>
-                  <h3>${order.customer_name}</h3>
-                  <div class="order-meta">${order.customer_phone}</div>
+                  <h3>${escapeHtml(order.customer_name)}</h3>
+                  <div class="order-meta">${escapeHtml(order.customer_phone)}</div>
                 </div>
-                <select class="status-select" data-order-id="${order.id}" data-current-status="${order.status || "new"}">
+                <select class="status-select" data-order-id="${escapeHtml(order.id)}" data-current-status="${order.status || "new"}">
                   <option value="new" ${order.status === "new" ? "selected" : ""}>جديد</option>
                   <option value="confirmed" ${order.status === "confirmed" ? "selected" : ""}>مؤكد</option>
                   <option value="preparing" ${order.status === "preparing" ? "selected" : ""}>قيد التحضير</option>
@@ -262,30 +270,30 @@
               </div>
 
               <div class="order-meta" style="margin-top:6px;">
-                العنوان: ${order.address || "غير محدد"}
+                العنوان: ${escapeHtml(order.address || "غير محدد")}
               </div>
 
-              ${order.map_url ? `<div class="order-meta" style="margin-top:6px;">
-                <a href="${order.map_url}" target="_blank" rel="noopener">فتح موقع الزبون</a>
+              ${safeUrl(order.map_url) ? `<div class="order-meta" style="margin-top:6px;">
+                <a href="${safeUrl(order.map_url)}" target="_blank" rel="noopener">فتح موقع الزبون</a>
               </div>` : ""}
 
               <ul class="item-list">
                 ${(order.items || []).map(item => `
                   <li>
-                    ${item.name} × ${item.quantity} — ${formatMoney(item.subtotal || item.unit_price * item.quantity)}
+                    ${escapeHtml(item.name)} × ${escapeHtml(item.quantity)} — ${formatMoney(item.subtotal || item.unit_price * item.quantity)}
                   </li>
                 `).join("")}
               </ul>
 
               <div class="order-meta">الإجمالي: <strong style="color:#043b36">${formatMoney(order.total)}</strong></div>
-              <div class="order-meta" style="margin-top:6px;">ملاحظات: ${order.notes || "لا توجد"}</div>
+              <div class="order-meta" style="margin-top:6px;">ملاحظات: ${escapeHtml(order.notes || "لا توجد")}</div>
             </div>
           `).join("")
         : "<div class='alert error'>لا توجد طلبات حتى الآن.</div>";
     }
 
     async function loadMenu() {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("menu_items")
         .select("*")
         .order("created_at", { ascending: true });
@@ -301,10 +309,10 @@
       menuList.innerHTML = (data || []).map(item => `
         <div class="menu-row">
           <div class="left">
-            <strong>${item.arabic}</strong>
-            <small>${item.english} — ${formatMoney(item.price)}</small>
+            <strong>${escapeHtml(item.arabic)}</strong>
+            <small>${escapeHtml(item.english)} — ${formatMoney(item.price)}</small>
           </div>
-          <button class="danger small-btn" data-delete-id="${item.id}" type="button">حذف</button>
+          <button class="danger small-btn" data-delete-id="${escapeHtml(item.id)}" type="button">حذف</button>
         </div>
       `).join("");
     }
@@ -329,7 +337,7 @@
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await db
         .from("menu_items")
         .insert([{ arabic, english, price, category, image }]);
 
@@ -353,7 +361,7 @@
 
       const id = target.getAttribute("data-delete-id");
 
-      const { error } = await supabase
+      const { error } = await db
         .from("menu_items")
         .delete()
         .eq("id", id);
@@ -373,7 +381,7 @@
       const orderId = target.dataset.orderId;
       const newStatus = target.value;
 
-      const { error } = await supabase
+      const { error } = await db
         .from("orders")
         .update({ status: newStatus })
         .eq("id", orderId);
