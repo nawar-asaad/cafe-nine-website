@@ -65,6 +65,8 @@
     .alert{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13px}
     .alert.error{background:#fef1f1;color:#8d2b2b}
     .alert.success{background:#edf9f0;color:#1d6b46}
+    .order-item.fresh{border-color:#d9b25f;box-shadow:0 0 0 3px rgba(234,216,174,.7)}
+    .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;background:var(--dark);color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.25);font-weight:700;max-width:calc(100% - 32px)}
     @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)} .grid{grid-template-columns:1fr}}
     @media(max-width:500px){.stats{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:flex-start}}
   </style>
@@ -88,12 +90,14 @@
     </form>
   </div>
 
+  <div id="toast" class="toast hidden" role="status"></div>
   <div id="adminView" class="wrap hidden">
     <div class="toolbar">
       <div>
         <h1 class="title" style="font-size:26px">لوحة إدارة Café Nine</h1>
       </div>
       <div class="top-actions">
+        <button id="alertsBtn" class="small-btn" type="button">🔔 تفعيل التنبيهات</button>
         <span class="badge">Admin</span>
         <button class="secondary" id="logoutBtn" type="button">تسجيل الخروج</button>
       </div>
@@ -176,6 +180,7 @@
         adminView.classList.remove("hidden");
         await loadOrders();
         await loadMenu();
+        startLiveUpdates();
       }
     }
 
@@ -201,9 +206,12 @@
       adminView.classList.remove("hidden");
       await loadOrders();
       await loadMenu();
+      startLiveUpdates();
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
+      stopLiveUpdates();
+      lastOrderId = null;
       await db.auth.signOut();
       loginView.classList.remove("hidden");
       adminView.classList.add("hidden");
@@ -219,6 +227,112 @@
 
     function formatMoney(value) {
       return Number(value || 0).toLocaleString("en-US") + " IQD";
+    }
+
+    // --- New-order alerts: realtime + polling fallback, desktop notification, soft chime ---
+    let lastOrderId = null;
+    const freshIds = new Set();
+    let unseen = 0;
+    const baseTitle = document.title;
+    let audioCtx = null;
+    let ordersChannel = null;
+    let pollTimer = null;
+
+    function unlockAudio() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx && AC) audioCtx = new AC();
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    }
+    document.addEventListener("click", unlockAudio);
+
+    function playChime() {
+      unlockAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      [[880, 0], [1318.5, 0.18]].forEach(([freq, delay]) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t + delay);
+        gain.gain.exponentialRampToValueAtTime(0.18, t + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + delay + 0.6);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t + delay);
+        osc.stop(t + delay + 0.65);
+      });
+    }
+
+    function updateAlertsButton() {
+      const btn = document.getElementById("alertsBtn");
+      if (!("Notification" in window)) btn.textContent = "🔔 تنبيه صوتي فقط";
+      else if (Notification.permission === "granted") btn.textContent = "🔔 التنبيهات مفعّلة";
+      else if (Notification.permission === "denied") btn.textContent = "🔕 الإشعارات محظورة من المتصفح";
+      else btn.textContent = "🔔 تفعيل التنبيهات";
+    }
+
+    document.getElementById("alertsBtn").addEventListener("click", async () => {
+      unlockAudio();
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+      updateAlertsButton();
+      playChime();
+    });
+    updateAlertsButton();
+
+    let toastTimer = null;
+    function showToast(text) {
+      const toast = document.getElementById("toast");
+      toast.textContent = text;
+      toast.classList.remove("hidden");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add("hidden"), 8000);
+    }
+
+    function clearUnseen() {
+      unseen = 0;
+      document.title = baseTitle;
+    }
+    window.addEventListener("focus", clearUnseen);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) clearUnseen(); });
+
+    function notifyNewOrders(orders) {
+      playChime();
+      const first = orders[0];
+      showToast(orders.length === 1
+        ? `🔔 طلب جديد من ${first.customer_name || "زبون"} — ${formatMoney(first.total)}`
+        : `🔔 وصلت ${orders.length} طلبات جديدة`);
+      if (document.hidden || !document.hasFocus()) {
+        unseen += orders.length;
+        document.title = `(${unseen}) طلب جديد — ${baseTitle}`;
+      }
+      if ("Notification" in window && Notification.permission === "granted") {
+        orders.forEach(order => {
+          const n = new Notification("طلب جديد — Café Nine", {
+            body: `${order.customer_name || "زبون"} • ${formatMoney(order.total)}`,
+            tag: "order-" + order.id,
+            icon: "logo.svg",
+            requireInteraction: true
+          });
+          n.onclick = () => { window.focus(); n.close(); };
+        });
+      }
+    }
+
+    function startLiveUpdates() {
+      stopLiveUpdates();
+      ordersChannel = db.channel("orders-feed")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => loadOrders())
+        .subscribe();
+      pollTimer = setInterval(loadOrders, 30000);
+    }
+
+    function stopLiveUpdates() {
+      if (ordersChannel) db.removeChannel(ordersChannel);
+      ordersChannel = null;
+      clearInterval(pollTimer);
+      pollTimer = null;
     }
 
     async function loadOrders() {
@@ -238,6 +352,14 @@
       const counts = { new: 0, confirmed: 0, preparing: 0, ready: 0, delivered: 0 };
       const items = data || [];
 
+      const maxId = items.reduce((max, order) => Math.max(max, Number(order.id) || 0), 0);
+      if (lastOrderId !== null) {
+        const fresh = items.filter(order => Number(order.id) > lastOrderId && (order.status || "new") === "new");
+        fresh.forEach(order => freshIds.add(String(order.id)));
+        if (fresh.length) notifyNewOrders(fresh);
+      }
+      lastOrderId = Math.max(lastOrderId ?? 0, maxId);
+
       items.forEach(order => {
         counts[order.status || "new"] = (counts[order.status || "new"] || 0) + 1;
       });
@@ -250,7 +372,7 @@
 
       ordersList.innerHTML = items.length
         ? items.map(order => `
-            <div class="order-item">
+            <div class="order-item${freshIds.has(String(order.id)) && (order.status || "new") === "new" ? " fresh" : ""}">
               <div class="order-head">
                 <div>
                   <h3>${escapeHtml(order.customer_name)}</h3>
