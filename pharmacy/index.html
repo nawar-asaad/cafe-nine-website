@@ -302,7 +302,16 @@ const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); r
 const DAY = 864e5;
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const fmtN = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
-const money = n => fmtN(n) + ' ' + (DB.settings.currency || '');
+// كل المبالغ تُخزَّن بالدينار العراقي، وتُعرض بالعملة المختارة في الإعدادات
+const CURRENCIES = { IQD: { sym: 'د.ع', name: 'دينار عراقي', dec: 0 }, USD: { sym: '$', name: 'دولار أمريكي', dec: 2 } };
+const curCode = () => DB.settings.currencyCode === 'USD' ? 'USD' : 'IQD';
+const sym = () => CURRENCIES[curCode()].sym;
+const usdRate = () => Math.max(1, num(DB.settings.usdRate) || 1480);
+const cv = n => curCode() === 'USD' ? (n || 0) / usdRate() : (n || 0);
+const cm = n => { const d = CURRENCIES[curCode()].dec, f = Math.pow(10, d); return Math.round(cv(n) * f) / f; };
+const toBase = v => Math.round(curCode() === 'USD' ? num(v) * usdRate() : num(v));
+const fmtM = n => Number(cv(n)).toLocaleString('en-US', { minimumFractionDigits: CURRENCIES[curCode()].dec, maximumFractionDigits: CURRENCIES[curCode()].dec });
+const money = n => fmtM(n) + ' ' + sym();
 const shortN = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(Math.round(n));
 const AR_DAYS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const AR_MONTHS = ['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
@@ -372,10 +381,17 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (
 function load() {
   try { const s = localStorage.getItem(KEY); if (s) DB = JSON.parse(s); } catch (e) { DB = null; }
   if (!DB || !Array.isArray(DB.products)) { DB = seed(); save(); }
-  DB.settings = Object.assign(defaultSettings(), DB.settings || {});
+  DB.settings = Object.assign(defaultSettings(), DB.settings || {}); migrateCurrency();
   DB.categories ||= []; DB.shelves ||= []; DB.invoices ||= []; DB.nextNo ||= DB.invoices.length + 1;
 }
-function defaultSettings() { return { name: 'صيدلية الرحمة', address: 'الشارع الرئيسي', phone: '0000000000', currency: 'ل.س', expiryDays: 90, footer: 'نتمنى لكم الشفاء العاجل', pharmacist: '' }; }
+function migrateCurrency() {
+  // نسخة سابقة كانت بالليرة السورية: إذا كانت البيانات تجريبية نعيد توليدها بأسعار الدينار
+  const S = DB.settings;
+  if (S.currency === 'ل.س' && DB.sample) { DB = seed(); DB.settings = Object.assign(S, { address: 'بغداد - العراق' }); }
+  if (!['IQD', 'USD'].includes(S.currencyCode)) S.currencyCode = S.currency === '$' ? 'USD' : 'IQD';
+  delete DB.settings.currency;
+}
+function defaultSettings() { return { name: 'صيدلية الرحمة', address: 'بغداد - العراق', phone: '0000000000', currencyCode: 'IQD', usdRate: 1480, expiryDays: 90, footer: 'نتمنى لكم الشفاء العاجل', pharmacist: '' }; }
 const catById = id => DB.categories.find(c => c.id === id);
 const shelfById = id => DB.shelves.find(s => s.id === id);
 const prodById = id => DB.products.find(p => p.id === id);
@@ -437,7 +453,8 @@ function seed() {
   const products = P.map(p => {
     let bc = '';
     if (p[11]) { do { let d = '62' + String(Math.floor(rnd() * 1e10)).padStart(10, '0'); bc = d + ean13Check(d); } while (used.has(bc)); used.add(bc); }
-    return { id: uid(), name: p[0], sci: p[1], categoryId: cats[p[2]].id, shelfId: shelves[p[3]].id, qty: p[4], minQty: p[5], buy: p[6], sell: p[7], unit: p[8], expiry: ymd(addDays(today, p[9])), company: p[10], barcode: bc, created: ymd(addDays(today, -60)) };
+    const iq = (v, st) => Math.max(st, Math.round(v * .4 / st) * st);
+    return { id: uid(), name: p[0], sci: p[1], categoryId: cats[p[2]].id, shelfId: shelves[p[3]].id, qty: p[4], minQty: p[5], buy: iq(p[6], 50), sell: iq(p[7], 250), unit: p[8], expiry: ymd(addDays(today, p[9])), company: p[10], barcode: bc, created: ymd(addDays(today, -60)) };
   });
   // مواد راكدة في العيّنة: لا تُباع أبداً، وأخرى بيعت قبل أكثر من شهر فقط
   const neverSold = new Set(['أوتوسبورين قطرة أذن', 'يوثيروكس 50 ميكروغرام', 'دكتارين كريم']);
@@ -455,7 +472,7 @@ function seed() {
       const items = []; const k = 1 + Math.floor(rnd() * 3);
       for (let j = 0; j < k; j++) { const p = bag[Math.floor(rnd() * bag.length)]; if (items.find(x => x.pid === p.id)) continue; items.push({ pid: p.id, name: p.name, qty: 1 + (rnd() < .25 ? 1 : 0), price: p.sell, cost: p.buy }); }
       const subtotal = items.reduce((s, x) => s + x.qty * x.price, 0);
-      const discount = rnd() < .1 ? Math.round(subtotal * .05 / 100) * 100 : 0;
+      const discount = rnd() < .1 ? Math.round(subtotal * .05 / 250) * 250 : 0;
       invoices.push({ id: uid(), no: no++, date: t.toISOString(), items, subtotal, discount, total: subtotal - discount, paid: subtotal - discount, customer: '', status: 'ok' });
     });
   }
@@ -514,13 +531,14 @@ function periodRange(kind, f, t) {
 /* ============================================================
    رسوم بيانية على Canvas
    ============================================================ */
-function barChart(cv, labels, values, { c1 = '#12c28f', c2 = '#0a8a9c', fmt = shortN, highlightLast = true } = {}) {
-  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+function barChart(cnv, labels, values, { c1 = '#12c28f', c2 = '#0a8a9c', fmt = shortN, highlightLast = true } = {}) {
+  const dpr = window.devicePixelRatio || 1, W = cnv.clientWidth, H = cnv.clientHeight;
   if (!W) return;
-  cv.width = W * dpr; cv.height = H * dpr;
-  const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
+  cnv.width = W * dpr; cnv.height = H * dpr;
+  const c = cnv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
   const css = getComputedStyle(document.documentElement);
   const muted = css.getPropertyValue('--muted').trim(), line = css.getPropertyValue('--line').trim(), ink = css.getPropertyValue('--ink').trim();
+  values = values.map(cv);
   const pl = 48, pr = 10, pt = 22, pb = 30, n = values.length, cw = W - pl - pr, ch = H - pt - pb;
   const raw = Math.max(1, ...values); const mag = Math.pow(10, Math.floor(Math.log10(raw))); const max = Math.ceil(raw / mag * 2) / 2 * mag;
   c.font = '12px Tajawal, Tahoma, sans-serif'; c.textBaseline = 'middle'; c.direction = 'ltr';
@@ -540,16 +558,16 @@ function barChart(cv, labels, values, { c1 = '#12c28f', c2 = '#0a8a9c', fmt = sh
     if (n <= 16 && v > 0) { c.fillStyle = ink; c.textAlign = 'center'; c.font = 'bold 11px Tajawal, Tahoma, sans-serif'; c.fillText(fmt(v), x + bw / 2, y - 9); c.font = '12px Tajawal, Tahoma, sans-serif'; }
     if (i % every === 0 || i === n - 1) { c.fillStyle = muted; c.textAlign = 'center'; c.fillText(labels[i], x + bw / 2, H - pb / 2 + 2); }
   });
-  cv.onmousemove = e => { const bx = e.offsetX; const hit = rects.find(r => bx >= r.x - 3 && bx <= r.x + r.w + 3); cv.title = hit ? `${hit.l}: ${fmtN(hit.v)} ${DB.settings.currency}` : ''; };
+  cnv.onmousemove = e => { const bx = e.offsetX; const hit = rects.find(r => bx >= r.x - 3 && bx <= r.x + r.w + 3); cnv.title = hit ? `${hit.l}: ${fmtN(Math.round(hit.v * 100) / 100)} ${sym()}` : ''; };
 }
-function donut(cv, parts) {
-  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W) return;
-  cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
+function donut(cnv, parts) {
+  const dpr = window.devicePixelRatio || 1, W = cnv.clientWidth, H = cnv.clientHeight; if (!W) return;
+  cnv.width = W * dpr; cnv.height = H * dpr; const c = cnv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
   const total = parts.reduce((s, p) => s + p.v, 0) || 1, R = Math.min(W, H) / 2 - 6, cx = W / 2, cy = H / 2; let a = -Math.PI / 2;
   parts.forEach(p => { const da = p.v / total * Math.PI * 2; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, a, a + da); c.closePath(); c.fillStyle = p.c; c.fill(); a += da; });
   c.beginPath(); c.arc(cx, cy, R * .58, 0, Math.PI * 2); c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim(); c.fill();
   c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'ltr';
-  c.font = 'bold 18px Cairo, Tahoma, sans-serif'; c.fillText(shortN(total), cx, cy - 6); c.font = '12px Tajawal, Tahoma, sans-serif'; c.fillText(DB.settings.currency, cx, cy + 14);
+  c.font = 'bold 18px Cairo, Tahoma, sans-serif'; c.fillText(shortN(cv(total)), cx, cy - 6); c.font = '12px Tajawal, Tahoma, sans-serif'; c.fillText(sym(), cx, cy + 14);
 }
 
 /* ============================================================
@@ -575,7 +593,7 @@ function downloadFile(name, content, type) {
 }
 function exportCSV(name, headers, rows) {
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  downloadFile(name, '﻿' + [headers, ...rows].map(r => r.map(q).join(',')).join('\n'), 'text/csv;charset=utf-8');
+  downloadFile(name, '﻿' + [[`العملة: ${CURRENCIES[curCode()].name}`], headers, ...rows].map(r => r.map(q).join(',')).join('\n'), 'text/csv;charset=utf-8');
 }
 
 /* ============================================================
@@ -681,7 +699,7 @@ VIEWS.pos = v => {
       <div class="cart-items" id="cartItems"></div>
       <div class="form-grid">
         <label class="f">اسم الزبون (اختياري)<input class="i" id="custName" placeholder="زبون نقدي"></label>
-        <label class="f">الخصم (${esc(DB.settings.currency)})<input class="i num" id="discount" type="number" min="0" value="0"></label>
+        <label class="f">الخصم (${esc(sym())})<input class="i num" id="discount" type="number" min="0" value="0"></label>
         <label class="f full">المبلغ المدفوع<input class="i num" id="paid" type="number" min="0" placeholder="يساوي الإجمالي إذا تُرك فارغاً"></label>
       </div>
       <div class="totals" id="totals"></div>
@@ -740,8 +758,8 @@ function setQty(it, q) {
 }
 function cartTotals() {
   const subtotal = CART.reduce((s, it) => s + it.qty * prodById(it.pid).sell, 0);
-  const discount = Math.min(subtotal, Math.max(0, num($('#discount')?.value)));
-  const total = subtotal - discount; const pv = $('#paid')?.value; const paid = pv === '' || pv == null ? total : num(pv);
+  const discount = Math.min(subtotal, Math.max(0, toBase($('#discount')?.value)));
+  const total = subtotal - discount; const pv = $('#paid')?.value; const paid = pv === '' || pv == null ? total : toBase(pv);
   return { subtotal, discount, total, paid, change: paid - total };
 }
 function renderCart() {
@@ -779,7 +797,7 @@ const receiptHTML = inv => `
     ${inv.status === 'void' ? '<div class="c" style="margin:6px 0"><span class="void-stamp">فاتورة ملغاة</span></div>' : ''}
     <hr>
     <table><thead><tr><th>المادة</th><th>كمية</th><th>سعر</th><th>مجموع</th></tr></thead><tbody>
-    ${inv.items.map(x => `<tr><td>${esc(x.name)}</td><td class="num">${fmtN(x.qty)}</td><td class="num">${fmtN(x.price)}</td><td class="num">${fmtN(x.qty * x.price)}</td></tr>`).join('')}
+    ${inv.items.map(x => `<tr><td>${esc(x.name)}</td><td class="num">${fmtN(x.qty)}</td><td class="num">${fmtM(x.price)}</td><td class="num">${fmtM(x.qty * x.price)}</td></tr>`).join('')}
     </tbody></table>
     <hr>
     <div class="tot" style="font-weight:400"><span>المجموع</span><span class="num">${money(inv.subtotal)}</span></div>
@@ -802,7 +820,7 @@ function showInvoice(inv) {
 function invoiceTable(list) {
   if (!list.length) return '<div class="empty">لا توجد فواتير في هذه الفترة.</div>';
   return `<div class="tbl-wrap"><table class="t"><thead><tr><th>رقم</th><th>التاريخ والوقت</th><th>الزبون</th><th>عدد المواد</th><th>الخصم</th><th>الإجمالي</th><th>الحالة</th><th></th></tr></thead><tbody>
-  ${list.map(i => `<tr><td class="n num"><b>${i.no}</b></td><td class="n num">${fmtDT(i.date)}</td><td>${esc(i.customer || 'زبون نقدي')}</td><td class="n num">${i.items.reduce((s, x) => s + x.qty, 0)}</td><td class="n num">${fmtN(i.discount)}</td><td class="n num"><b>${money(i.total)}</b></td><td>${i.status === 'void' ? '<span class="pill bad">ملغاة</span>' : '<span class="pill ok">مدفوعة</span>'}</td><td class="n"><button class="btn sm" data-inv="${i.id}">عرض</button></td></tr>`).join('')}
+  ${list.map(i => `<tr><td class="n num"><b>${i.no}</b></td><td class="n num">${fmtDT(i.date)}</td><td>${esc(i.customer || 'زبون نقدي')}</td><td class="n num">${i.items.reduce((s, x) => s + x.qty, 0)}</td><td class="n num">${fmtM(i.discount)}</td><td class="n num"><b>${money(i.total)}</b></td><td>${i.status === 'void' ? '<span class="pill bad">ملغاة</span>' : '<span class="pill ok">مدفوعة</span>'}</td><td class="n"><button class="btn sm" data-inv="${i.id}">عرض</button></td></tr>`).join('')}
   </tbody></table></div>`;
 }
 function bindInvoiceTable(root) { if (root._invBound) return; root._invBound = true; root.addEventListener('click', e => { const b = e.target.closest('[data-inv]'); if (b) showInvoice(DB.invoices.find(i => i.id === b.dataset.inv)); }); }
@@ -830,7 +848,7 @@ VIEWS.invoices = v => {
   <div class="card"><div class="row" style="margin-bottom:10px"><h3 style="margin:0">قائمة الفواتير</h3><span class="spacer"></span><button class="btn sm" id="invCsv">${ic('down', 16)} تصدير Excel (CSV)</button></div>${invoiceTable(list)}</div>`;
   bindPeriodSeg(v, INV_STATE, () => VIEWS.invoices(v));
   const iq = $('#invQ'); iq.oninput = () => { INV_STATE.q = iq.value; clearTimeout(iq._t); iq._t = setTimeout(() => { VIEWS.invoices(v); const n = $('#invQ'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 300); };
-  $('#invCsv').onclick = () => exportCSV(`فواتير-${ymd(r.from)}-${ymd(r.to)}.csv`, ['رقم الفاتورة', 'التاريخ', 'الزبون', 'المواد', 'المجموع', 'الخصم', 'الإجمالي', 'الحالة'], list.map(i => [i.no, fmtDT(i.date), i.customer, i.items.map(x => `${x.name} ×${x.qty}`).join(' | '), i.subtotal, i.discount, i.total, i.status === 'void' ? 'ملغاة' : 'مدفوعة']));
+  $('#invCsv').onclick = () => exportCSV(`فواتير-${ymd(r.from)}-${ymd(r.to)}.csv`, ['رقم الفاتورة', 'التاريخ', 'الزبون', 'المواد', 'المجموع', 'الخصم', 'الإجمالي', 'الحالة'], list.map(i => [i.no, fmtDT(i.date), i.customer, i.items.map(x => `${x.name} ×${x.qty}`).join(' | '), cm(i.subtotal), cm(i.discount), cm(i.total), i.status === 'void' ? 'ملغاة' : 'مدفوعة']));
   bindInvoiceTable(v);
 };
 function periodSeg(kind) {
@@ -883,7 +901,7 @@ VIEWS.products = v => {
     if (!list.length) { toast('كل المواد لديها باركود.', 'ok'); return; }
     askConfirm(`سيتم توليد باركود فريد لـ ${list.length} مادة لا تملك باركود. متابعة؟`, () => { list.forEach(p => p.barcode = newBarcode()); save(); toast(`تم توليد ${list.length} باركود. يمكنك طباعة الملصقات من صفحة الباركود.`, 'ok'); rer(); }, 'توليد');
   };
-  $('#pCsv').onclick = () => exportCSV('المواد-والمخزون.csv', ['الباركود', 'الاسم', 'الاسم العلمي', 'الشركة', 'القسم', 'الرف', 'الكمية', 'الوحدة', 'الحد الأدنى', 'سعر الشراء', 'سعر البيع', 'تاريخ الانتهاء'], filteredProducts().map(p => [p.barcode, p.name, p.sci, p.company, catById(p.categoryId)?.name, shelfById(p.shelfId)?.number, p.qty, p.unit, p.minQty, p.buy, p.sell, p.expiry]));
+  $('#pCsv').onclick = () => exportCSV('المواد-والمخزون.csv', ['الباركود', 'الاسم', 'الاسم العلمي', 'الشركة', 'القسم', 'الرف', 'الكمية', 'الوحدة', 'الحد الأدنى', 'سعر الشراء', 'سعر البيع', 'تاريخ الانتهاء'], filteredProducts().map(p => [p.barcode, p.name, p.sci, p.company, catById(p.categoryId)?.name, shelfById(p.shelfId)?.number, p.qty, p.unit, p.minQty, cm(p.buy), cm(p.sell), p.expiry]));
   $('#plist').addEventListener('click', e => {
     const b = e.target.closest('[data-a]'); if (!b) return; const p = prodById(b.dataset.id);
     if (b.dataset.a === 'edit') productForm(p);
@@ -912,8 +930,8 @@ function renderProductTable() {
     <td>${catPill(p.categoryId)}</td>
     <td class="n"><b>${shelfLabel(shelfById(p.shelfId))}</b></td>
     <td class="n">${stockPill(p)}</td>
-    <td class="n num">${fmtN(p.buy)}</td>
-    <td class="n num"><b>${fmtN(p.sell)}</b></td>
+    <td class="n num">${fmtM(p.buy)}</td>
+    <td class="n num"><b>${fmtM(p.sell)}</b></td>
     <td class="n">${expPill(p)}</td>
     <td class="n"><div class="row" style="gap:4px;flex-wrap:nowrap">
       <button class="iconbtn" data-a="stock" data-id="${p.id}" title="استلام كمية / جرد">${ic('box', 16)}</button>
@@ -941,12 +959,12 @@ function productForm(p) {
     <label class="f">تاريخ انتهاء الصلاحية<input class="i num" type="date" name="expiry" value="${esc(p.expiry)}"></label>
     <label class="f">الكمية المتوفرة<input class="i num" type="number" name="qty" min="0" step="1" value="${p.qty}"></label>
     <label class="f">الحد الأدنى للتنبيه<input class="i num" type="number" name="minQty" min="0" step="1" value="${p.minQty}"></label>
-    <label class="f">سعر الشراء<input class="i num" type="number" name="buy" min="0" step="any" value="${p.buy}"></label>
-    <label class="f">سعر البيع *<input class="i num" type="number" name="sell" min="0" step="any" value="${p.sell}" required></label>
+    <label class="f">سعر الشراء (${sym()})<input class="i num" type="number" name="buy" min="0" step="any" value="${cm(p.buy)}"></label>
+    <label class="f">سعر البيع (${sym()}) *<input class="i num" type="number" name="sell" min="0" step="any" value="${cm(p.sell)}" required></label>
     <div class="full small muted" id="margin"></div>
   </form>`, `<button class="btn primary" id="pSave">${isNew ? 'إضافة المادة' : 'حفظ التعديلات'}</button><button class="btn" data-close>إلغاء</button>`);
   const f = $('#pf', m.root), bcIn = $('#bcIn', m.root);
-  const prev = () => { $('#bcPrev', m.root).innerHTML = bcIn.value.trim() ? `<span class="bc">${barcodeSVG(bcIn.value.trim())}</span>` : ''; const b = num(f.buy.value), s = num(f.sell.value); $('#margin', m.root).textContent = s > 0 ? `هامش الربح: ${fmtN(s - b)} ${DB.settings.currency} (${b ? Math.round((s - b) / b * 100) : 0}%)` : ''; };
+  const prev = () => { $('#bcPrev', m.root).innerHTML = bcIn.value.trim() ? `<span class="bc">${barcodeSVG(bcIn.value.trim())}</span>` : ''; const b = num(f.buy.value), s = num(f.sell.value); $('#margin', m.root).textContent = s > 0 ? `هامش الربح: ${fmtN(Math.round((s - b) * 100) / 100)} ${sym()} (${b ? Math.round((s - b) / b * 100) : 0}%)` : ''; };
   bcIn.oninput = prev; f.buy.oninput = f.sell.oninput = prev; prev();
   bcIn.onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
   $('#genBc', m.root).onclick = () => { bcIn.value = newBarcode(); prev(); };
@@ -956,7 +974,7 @@ function productForm(p) {
     if (!d.name) { toast('اكتب اسم المادة.', 'bad'); return; }
     if (num(d.sell) <= 0) { toast('أدخل سعر بيع أكبر من صفر.', 'bad'); return; }
     if (d.barcode && DB.products.some(x => x.barcode === d.barcode && x !== p)) { toast('هذا الباركود مستخدم لمادة أخرى.', 'bad'); return; }
-    Object.assign(p, { name: d.name, sci: d.sci.trim(), company: d.company.trim(), categoryId: d.categoryId, shelfId: d.shelfId, barcode: d.barcode, unit: d.unit, expiry: d.expiry, qty: Math.floor(num(d.qty)), minQty: Math.floor(num(d.minQty)), buy: num(d.buy), sell: num(d.sell) });
+    Object.assign(p, { name: d.name, sci: d.sci.trim(), company: d.company.trim(), categoryId: d.categoryId, shelfId: d.shelfId, barcode: d.barcode, unit: d.unit, expiry: d.expiry, qty: Math.floor(num(d.qty)), minQty: Math.floor(num(d.minQty)), buy: toBase(d.buy), sell: toBase(d.sell) });
     if (isNew) { p.id = uid(); p.created = ymd(new Date()); DB.products.push(p); }
     save(); m.close(); toast(isNew ? 'تمت إضافة المادة.' : 'تم حفظ التعديلات.', 'ok'); go(current);
   };
@@ -970,15 +988,15 @@ function stockForm(p) {
       <div class="form-grid">
         <label class="f" id="qLbl">الكمية المستلمة<input class="i num" type="number" id="sq" min="0" step="1" value="0" autofocus></label>
         <label class="f">تاريخ الصلاحية للدفعة<input class="i num" type="date" id="sexp" value="${esc(p.expiry)}"></label>
-        <label class="f">سعر الشراء<input class="i num" type="number" id="sbuy" step="any" value="${p.buy}"></label>
-        <label class="f">سعر البيع<input class="i num" type="number" id="ssell" step="any" value="${p.sell}"></label>
+        <label class="f">سعر الشراء<input class="i num" type="number" id="sbuy" step="any" value="${cm(p.buy)}"></label>
+        <label class="f">سعر البيع<input class="i num" type="number" id="ssell" step="any" value="${cm(p.sell)}"></label>
       </div>
     </div>`, `<button class="btn primary" id="sSave">حفظ</button><button class="btn" data-close>إلغاء</button>`, 'sm');
   let mode = 'add';
   $('#mode', m.root).onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; $$('#mode button', m.root).forEach(x => x.classList.toggle('on', x === b)); $('#qLbl', m.root).firstChild.textContent = mode === 'add' ? 'الكمية المستلمة' : 'الكمية الفعلية على الرف'; $('#sq', m.root).value = mode === 'add' ? 0 : p.qty; };
   $('#sSave', m.root).onclick = () => {
     const q = Math.floor(num($('#sq', m.root).value)); if (q < 0) { toast('الكمية لا يمكن أن تكون سالبة.', 'bad'); return; }
-    p.qty = mode === 'add' ? p.qty + q : q; p.expiry = $('#sexp', m.root).value; p.buy = num($('#sbuy', m.root).value); p.sell = num($('#ssell', m.root).value);
+    p.qty = mode === 'add' ? p.qty + q : q; p.expiry = $('#sexp', m.root).value; p.buy = toBase($('#sbuy', m.root).value); p.sell = toBase($('#ssell', m.root).value);
     save(); m.close(); toast(`الكمية الجديدة من "${p.name}": ${fmtN(p.qty)}`, 'ok'); go(current);
   };
 }
@@ -998,7 +1016,7 @@ VIEWS.categories = v => {
       <div class="grid g3" style="margin-top:14px;gap:8px;text-align:center">
         <div><b class="num" style="font-size:22px;font-family:var(--font-display)">${ps.length}</b><div class="small muted">مادة</div></div>
         <div><b class="num" style="font-size:22px;font-family:var(--font-display);color:${low ? 'var(--bad)' : 'var(--ok)'}">${low}</b><div class="small muted">ناقصة</div></div>
-        <div><b class="num" style="font-size:16px;font-family:var(--font-display)">${shortN(m.byCat.get(c.id) || 0)}</b><div class="small muted">مبيعات 30 يوماً</div></div>
+        <div><b class="num" style="font-size:16px;font-family:var(--font-display)">${shortN(cv(m.byCat.get(c.id) || 0))}</b><div class="small muted">مبيعات 30 يوماً</div></div>
       </div>
       <div class="small muted" style="margin-top:10px">قيمة المخزون بسعر البيع: <b class="num" style="color:var(--ink)">${money(val)}</b></div>
       <button class="btn sm" style="margin-top:10px" data-v="${c.id}">عرض المواد</button>
@@ -1038,7 +1056,7 @@ function shelfDetail(s) {
   const ps = DB.products.filter(p => p.shelfId === s.id).sort((a, b) => a.name.localeCompare(b.name, 'ar'));
   const m = openModal(`رف ${s.number} — ${esc(s.section)}`, `
     <div class="row" style="margin-bottom:12px">${s.categoryId ? catPill(s.categoryId) : ''}<span class="muted">${esc(s.note || '')}</span></div>
-    ${ps.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>المادة</th><th>الباركود</th><th>الكمية</th><th>سعر البيع</th><th>الصلاحية</th></tr></thead><tbody>${ps.map(p => `<tr><td><div class="pname">${esc(p.name)}</div><div class="psci">${esc(p.sci || '')}</div></td><td class="n">${p.barcode ? `<span class="code">${esc(p.barcode)}</span>` : '<span class="pill none">—</span>'}</td><td class="n">${stockPill(p)}</td><td class="n num">${fmtN(p.sell)}</td><td class="n">${expPill(p)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">هذا الرف فارغ. عيّن الرف للمواد من صفحة المواد.</div>'}`,
+    ${ps.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>المادة</th><th>الباركود</th><th>الكمية</th><th>سعر البيع</th><th>الصلاحية</th></tr></thead><tbody>${ps.map(p => `<tr><td><div class="pname">${esc(p.name)}</div><div class="psci">${esc(p.sci || '')}</div></td><td class="n">${p.barcode ? `<span class="code">${esc(p.barcode)}</span>` : '<span class="pill none">—</span>'}</td><td class="n">${stockPill(p)}</td><td class="n num">${fmtM(p.sell)}</td><td class="n">${expPill(p)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">هذا الرف فارغ. عيّن الرف للمواد من صفحة المواد.</div>'}`,
     `<button class="btn primary" data-edit>${ic('edit', 16)} تعديل الرف</button><button class="btn sky" data-list>إدارة مواد الرف</button><button class="btn coral" data-del>حذف الرف</button><button class="btn" data-close>إغلاق</button>`);
   m.root.querySelector('[data-edit]').onclick = () => { m.close(); shelfForm(s); };
   m.root.querySelector('[data-list]').onclick = () => { m.close(); PRODUCT_FILTER = { q: '', cat: '', shelf: s.id, status: '', sort: 'name' }; go('products'); };
@@ -1153,7 +1171,7 @@ const REPORT_TABS = {
       title: 'المبيعات اليومية',
       html: `<div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)" id="sRow">
         <div class="card"><h3>المبيعات حسب اليوم</h3><div class="chart-box"><canvas id="rc1"></canvas></div></div>
-        <div class="card"><h3>المبيعات حسب القسم العلاجي</h3><div class="chart-box" style="height:180px"><canvas id="rc2"></canvas></div><div class="legend" style="margin-top:12px">${cats.map(c => `<div><i class="dot" style="background:${c.c}"></i>${esc(c.n)}<span class="v">${shortN(c.v)}</span></div>`).join('') || '<div class="muted">لا مبيعات.</div>'}</div></div>
+        <div class="card"><h3>المبيعات حسب القسم العلاجي</h3><div class="chart-box" style="height:180px"><canvas id="rc2"></canvas></div><div class="legend" style="margin-top:12px">${cats.map(c => `<div><i class="dot" style="background:${c.c}"></i>${esc(c.n)}<span class="v">${shortN(cv(c.v))}</span></div>`).join('') || '<div class="muted">لا مبيعات.</div>'}</div></div>
       </div>
       <div class="card" style="margin-top:16px"><h3>أوقات الذروة (حسب الساعة)</h3><div class="chart-box" style="height:200px"><canvas id="rc3"></canvas></div></div>
       <div class="card" style="margin-top:16px"><h3>ملخص يومي</h3><div class="tbl-wrap"><table class="t"><thead><tr><th>اليوم</th><th>التاريخ</th><th>عدد الفواتير</th><th>المبيعات</th></tr></thead><tbody>${days.slice().reverse().map(([k, d]) => `<tr><td>${AR_DAYS[new Date(k).getDay()]}</td><td class="n num">${k}</td><td class="n num">${d.count}</td><td class="n num"><b>${money(d.total)}</b></td></tr>`).join('')}</tbody></table></div></div>`,
@@ -1162,7 +1180,7 @@ const REPORT_TABS = {
         const draw = () => { barChart($('#rc1'), days.map(([k]) => k.slice(5).replace('-', '/')), days.map(([, d]) => d.total), { highlightLast: false }); donut($('#rc2'), cats.map(c => ({ v: c.v, c: c.c }))); barChart($('#rc3'), hh.map(([h]) => h + ':00'), hh.map(([, v]) => v), { c1: '#8a6bff', c2: '#5b3fe0', highlightLast: false }); };
         draw(); resizeHooks.push(draw);
       },
-      csv: [['التاريخ', 'اليوم', 'عدد الفواتير', 'المبيعات'], days.map(([k, d]) => [k, AR_DAYS[new Date(k).getDay()], d.count, d.total])]
+      csv: [['التاريخ', 'اليوم', 'عدد الفواتير', 'المبيعات'], days.map(([k, d]) => [k, AR_DAYS[new Date(k).getDay()], d.count, cm(d.total)])]
     };
   },
   dispensed(a) {
@@ -1170,7 +1188,7 @@ const REPORT_TABS = {
     return {
       title: 'الكميات المصروفة',
       html: `<div class="card"><h3>${ic('up')} الكميات المصروفة من كل مادة</h3>${rows.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>#</th><th>المادة</th><th>القسم</th><th>الرف</th><th>الكمية المصروفة</th><th>قيمة المبيعات</th><th>الربح</th><th>المتبقي</th></tr></thead><tbody>${rows.map((x, i) => `<tr><td class="n num muted">${i + 1}</td><td class="pname">${esc(x.name)}</td><td>${x.p ? catPill(x.p.categoryId) : '<span class="pill none">محذوفة</span>'}</td><td class="n">${x.p ? shelfLabel(shelfById(x.p.shelfId)) : '—'}</td><td class="n"><span class="pill info num">${fmtN(x.qty)}</span></td><td class="n num">${money(x.rev)}</td><td class="n num" style="color:var(--ok)">${money(x.rev - x.cost)}</td><td class="n">${x.p ? stockPill(x.p) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لم تُصرف أي مادة في هذه الفترة.</div>'}</div>`,
-      csv: [['المادة', 'القسم', 'الرف', 'الكمية المصروفة', 'قيمة المبيعات', 'الربح', 'المتبقي'], rows.map(x => [x.name, catById(x.p?.categoryId)?.name || '', x.p ? shelfById(x.p.shelfId)?.number ?? '' : '', x.qty, x.rev, x.rev - x.cost, x.p?.qty ?? ''])]
+      csv: [['المادة', 'القسم', 'الرف', 'الكمية المصروفة', 'قيمة المبيعات', 'الربح', 'المتبقي'], rows.map(x => [x.name, catById(x.p?.categoryId)?.name || '', x.p ? shelfById(x.p.shelfId)?.number ?? '' : '', x.qty, cm(x.rev), cm(x.rev - x.cost), x.p?.qty ?? ''])]
     };
   },
   idle(a, r) {
@@ -1180,7 +1198,7 @@ const REPORT_TABS = {
     return {
       title: 'المواد غير المصروفة',
       html: `<div class="card"><div class="row" style="margin-bottom:10px"><h3 style="margin:0">${ic('sleep')} مواد لم تُصرف خلال: ${r.label}</h3><span class="spacer"></span><span class="pill warn">${rows.length} مادة</span><span class="pill bad num">رأس مال مجمّد ${money(tied)}</span></div>${rows.length ? `<div class="tbl-wrap"><table class="t"><thead><tr><th>المادة</th><th>القسم</th><th>الرف</th><th>الكمية في المخزون</th><th>قيمتها (شراء)</th><th>آخر بيع</th><th>الصلاحية</th></tr></thead><tbody>${rows.map(x => `<tr><td><div class="pname">${esc(x.p.name)}</div><div class="psci">${esc(x.p.sci || '')}</div></td><td>${catPill(x.p.categoryId)}</td><td class="n">${shelfLabel(shelfById(x.p.shelfId))}</td><td class="n">${stockPill(x.p)}</td><td class="n num">${money(Math.max(0, x.p.qty) * x.p.buy)}</td><td class="n">${x.last ? `<span class="num">${ymd(x.last)}</span> <span class="small muted">(منذ ${Math.round((Date.now() - x.last) / DAY)} يوم)</span>` : '<span class="pill bad">لم تُبع أبداً</span>'}</td><td class="n">${expPill(x.p)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">كل المواد صُرفت في هذه الفترة.</div>'}</div>`,
-      csv: [['المادة', 'القسم', 'الرف', 'الكمية', 'القيمة بسعر الشراء', 'آخر بيع', 'تاريخ الانتهاء'], rows.map(x => [x.p.name, catById(x.p.categoryId)?.name || '', shelfById(x.p.shelfId)?.number ?? '', x.p.qty, Math.max(0, x.p.qty) * x.p.buy, x.last ? ymd(x.last) : 'لم تُبع', x.p.expiry])]
+      csv: [['المادة', 'القسم', 'الرف', 'الكمية', 'القيمة بسعر الشراء', 'آخر بيع', 'تاريخ الانتهاء'], rows.map(x => [x.p.name, catById(x.p.categoryId)?.name || '', shelfById(x.p.shelfId)?.number ?? '', x.p.qty, cm(Math.max(0, x.p.qty) * x.p.buy), x.last ? ymd(x.last) : 'لم تُبع', x.p.expiry])]
     };
   },
   stock() {
@@ -1197,7 +1215,7 @@ const REPORT_TABS = {
         </div>
         <div class="card"><h3>المخزون حسب القسم العلاجي</h3><div class="tbl-wrap"><table class="t"><thead><tr><th>القسم</th><th>عدد الأصناف</th><th>عدد القطع</th><th>القيمة (شراء)</th><th>القيمة (بيع)</th><th>ناقصة</th></tr></thead><tbody>${byCat.map(x => `<tr><td>${catPill(x.c.id)}</td><td class="n num">${x.n}</td><td class="n num">${fmtN(x.q)}</td><td class="n num">${money(x.cost)}</td><td class="n num">${money(x.sale)}</td><td class="n">${x.low ? `<span class="pill bad num">${x.low}</span>` : '<span class="pill ok">0</span>'}</td></tr>`).join('')}<tr style="background:var(--surface-2);font-weight:800"><td>المجموع</td><td class="n num">${T.n}</td><td class="n num">${fmtN(T.q)}</td><td class="n num">${money(T.cost)}</td><td class="n num">${money(T.sale)}</td><td class="n num">${T.low}</td></tr></tbody></table></div></div>
         <div class="grid g2" style="margin-top:16px"><div class="card"><h3>${ic('alert')} مواد تحتاج إعادة طلب</h3>${alertTable(low, 'stock')}</div><div class="card"><h3>${ic('clock')} مواد قاربت أو انتهت صلاحيتها</h3>${alertTable(exp, 'exp')}</div></div>`,
-      csv: [['المادة', 'الباركود', 'القسم', 'الرف', 'الكمية', 'الحد الأدنى', 'سعر الشراء', 'سعر البيع', 'القيمة (شراء)', 'القيمة (بيع)', 'تاريخ الانتهاء', 'الحالة'], DB.products.slice().sort((a, b) => (shelfById(a.shelfId)?.number ?? 999) - (shelfById(b.shelfId)?.number ?? 999)).map(p => [p.name, p.barcode, catById(p.categoryId)?.name || '', shelfById(p.shelfId)?.number ?? '', p.qty, p.minQty, p.buy, p.sell, Math.max(0, p.qty) * p.buy, Math.max(0, p.qty) * p.sell, p.expiry, { ok: 'متوفر', low: 'ناقص', out: 'نافد' }[stockState(p)]])]
+      csv: [['المادة', 'الباركود', 'القسم', 'الرف', 'الكمية', 'الحد الأدنى', 'سعر الشراء', 'سعر البيع', 'القيمة (شراء)', 'القيمة (بيع)', 'تاريخ الانتهاء', 'الحالة'], DB.products.slice().sort((a, b) => (shelfById(a.shelfId)?.number ?? 999) - (shelfById(b.shelfId)?.number ?? 999)).map(p => [p.name, p.barcode, catById(p.categoryId)?.name || '', shelfById(p.shelfId)?.number ?? '', p.qty, p.minQty, cm(p.buy), cm(p.sell), cm(Math.max(0, p.qty) * p.buy), cm(Math.max(0, p.qty) * p.sell), p.expiry, { ok: 'متوفر', low: 'ناقص', out: 'نافد' }[stockState(p)]])]
     };
   }
 };
@@ -1214,7 +1232,9 @@ VIEWS.settings = v => {
         <label class="f full">اسم الصيدلية (يظهر في البرنامج والفواتير والملصقات)<input class="i" name="name" value="${esc(S.name)}" required></label>
         <label class="f">العنوان<input class="i" name="address" value="${esc(S.address)}"></label>
         <label class="f">الهاتف<input class="i num" name="phone" value="${esc(S.phone)}"></label>
-        <label class="f">رمز العملة<input class="i" name="currency" value="${esc(S.currency)}" placeholder="مثال: ل.س، د.ع، $"></label>
+        <label class="f">عملة العرض<select class="i" name="currencyCode"><option value="IQD" ${curCode() === 'IQD' ? 'selected' : ''}>دينار عراقي (د.ع)</option><option value="USD" ${curCode() === 'USD' ? 'selected' : ''}>دولار أمريكي ($)</option></select></label>
+        <label class="f">سعر صرف الدولار (دينار لكل 1 $)<input class="i num" type="number" min="1" step="any" name="usdRate" value="${usdRate()}"></label>
+        <div class="full small muted" style="margin-top:-4px">تُحفظ كل المبالغ بالدينار العراقي. عند اختيار الدولار تُعرض الأسعار والفواتير والتقارير محوّلة بسعر الصرف أعلاه، وتُدخل الأسعار الجديدة بالدولار.</div>
         <label class="f">التنبيه قبل انتهاء الصلاحية بـ (يوم)<input class="i num" type="number" min="1" name="expiryDays" value="${S.expiryDays}"></label>
         <label class="f full">عبارة أسفل الفاتورة<input class="i" name="footer" value="${esc(S.footer)}"></label>
         <div class="full"><button class="btn primary">حفظ الإعدادات</button></div>
@@ -1239,8 +1259,8 @@ VIEWS.settings = v => {
   $('#setF').onsubmit = e => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
     if (!d.name.trim()) { toast('اكتب اسم الصيدلية.', 'bad'); return; }
-    Object.assign(DB.settings, { name: d.name.trim(), address: d.address.trim(), phone: d.phone.trim(), currency: d.currency.trim(), expiryDays: Math.max(1, Math.floor(num(d.expiryDays)) || 90), footer: d.footer.trim() });
-    save(); applyBrand(); toast('تم حفظ الإعدادات.', 'ok');
+    Object.assign(DB.settings, { name: d.name.trim(), address: d.address.trim(), phone: d.phone.trim(), currencyCode: d.currencyCode === 'USD' ? 'USD' : 'IQD', usdRate: Math.max(1, num(d.usdRate) || 1480), expiryDays: Math.max(1, Math.floor(num(d.expiryDays)) || 90), footer: d.footer.trim() });
+    save(); applyBrand(); toast('تم حفظ الإعدادات.', 'ok'); go('settings');
   };
   $('#bExport').onclick = () => downloadFile(`نسخة-احتياطية-${DB.settings.name}-${ymd(new Date())}.json`, JSON.stringify(DB, null, 1), 'application/json');
   $('#bImport').onchange = e => {
@@ -1252,7 +1272,7 @@ VIEWS.settings = v => {
   $('#startFresh').onclick = () => askConfirm('سيتم حذف كل المواد والفواتير والرفوف، مع الإبقاء على الأقسام العلاجية والإعدادات. هل أنت متأكد؟ ننصح بتصدير نسخة احتياطية أولاً.', () => { DB.products = []; DB.invoices = []; DB.shelves = []; DB.nextNo = 1; DB.sample = false; CART = []; save(); toast('البرنامج جاهز للعمل الفعلي. ابدأ بإضافة الرفوف ثم المواد.', 'ok'); go('shelves'); }, 'مسح والبدء');
   $('#reseed').onclick = () => askConfirm('سيتم استبدال كل البيانات الحالية بالبيانات التجريبية. متابعة؟', () => { const s = DB.settings; DB = seed(); DB.settings = s; CART = []; save(); go('dashboard'); }, 'إعادة التحميل');
 };
-function load2() { DB.settings = Object.assign(defaultSettings(), DB.settings || {}); DB.categories ||= []; DB.shelves ||= []; DB.invoices ||= []; DB.nextNo ||= DB.invoices.length + 1; }
+function load2() { DB.settings = Object.assign(defaultSettings(), DB.settings || {}); migrateCurrency(); DB.categories ||= []; DB.shelves ||= []; DB.invoices ||= []; DB.nextNo ||= DB.invoices.length + 1; }
 
 /* ============================================================
    اختصارات لوحة المفاتيح وقارئ الباركود
