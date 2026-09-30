@@ -63,6 +63,14 @@ drop policy if exists "Admins can manage menu" on public.menu_items;
 create policy "Admins can manage menu" on public.menu_items
 for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
+-- Live updates for the admin page (new-order alerts). RLS still applies.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'orders') then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+end $$;
+
 -- To add another admin, create the account under Authentication > Users, then:
 -- insert into public.admin_users (user_id)
 -- select id from auth.users where email = 'someone@example.com'
