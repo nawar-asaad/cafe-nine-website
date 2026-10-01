@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<script>if(location.hostname.endsWith('github.io'))location.replace('https://ninecafe9.netlify.app'+location.pathname.replace(/^\/cafe-nine-website/,'')+location.search+location.hash)</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المدير — Café Nine</title>
+  <link rel="icon" href="logo.svg" />
+  <link rel="stylesheet" href="staff.css" />
+  <style>
+    .kpis{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+    .kpi .lab{font-size:13px;color:var(--muted)}
+    .kpi .val{font-size:26px;font-weight:800;color:var(--dark);margin-top:4px;direction:ltr;text-align:right}
+    .kpi.hero .val{font-size:44px}
+    .kpi .delta{font-size:12px;margin-top:4px;color:var(--muted)}
+    .kpi .delta b.up{color:#1d6b46}.kpi .delta b.down{color:#a33a2b}
+    @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi.hero{grid-column:1/-1}}
+    .charts{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+    @media(max-width:1000px){.charts{grid-template-columns:1fr}}
+    .chart{position:relative;width:100%;min-height:240px}
+    .chart svg{display:block;width:100%;overflow:visible}
+    .chart .grid-line{stroke:var(--grid);stroke-width:1}
+    .chart .axis-text{fill:var(--muted);font-size:11px}
+    .chart .bar{fill:var(--green)}
+    .chart .bar.dim{fill:#9cc4bd}
+    .chart .hit{fill:transparent;cursor:pointer}
+    .chart .hit:hover + .bar,.chart .bar.hover{fill:var(--dark)}
+    .tip{position:absolute;pointer-events:none;background:var(--dark);color:#fff;font-size:12px;padding:7px 10px;border-radius:9px;white-space:nowrap;transform:translate(-50%,-110%);z-index:5}
+    .tip b{color:var(--gold)}
+    .hbars{display:grid;gap:9px}
+    .hbar{display:grid;grid-template-columns:minmax(90px,34%) 1fr;gap:10px;align-items:center;font-size:13px}
+    .hbar .name{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hbar .track{display:flex;align-items:center;gap:8px;min-width:0}
+    .hbar .fill{height:18px;background:var(--green);border-radius:4px 0 0 4px;min-width:3px}
+    .hbar .v{color:var(--muted);font-size:12px;white-space:nowrap}
+    .insight-list{display:grid;gap:8px}
+    .insight{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+    .insight small{color:var(--muted)}
+    .tag{border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+    .tag.zero{background:#fbe6e6;color:#8d2b2b}
+    .tag.low{background:#fff1cf;color:#8a5a00}
+    .chart-empty{display:grid;place-items:center;min-height:200px;color:var(--muted);font-size:14px}
+    .view-table summary{cursor:pointer;color:var(--green);font-size:12px;margin-top:8px}
+    .view-table table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+    .view-table td,.view-table th{border-bottom:1px solid #eef2f0;padding:5px;text-align:right}
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <div id="loginView" class="login-box hidden">
+    <span class="role-tag">📊 واجهة المدير</span>
+    <h1 class="title">Café Nine</h1>
+    <p class="sub">سجّل الدخول بحساب مدير الكافيه</p>
+    <form id="loginForm">
+      <label>البريد الإلكتروني <input id="email" type="email" required autocomplete="username" /></label>
+      <label>كلمة المرور <input id="password" type="password" required autocomplete="current-password" /></label>
+      <button type="submit" style="margin-top:16px">تسجيل الدخول</button>
+      <div id="loginError" class="alert error hidden"></div>
+    </form>
+    <span class="login-switch">كاشير؟ <a href="cashier.html">واجهة الكاشير</a></span>
+  </div>
+
+  <div id="appView" class="shell hidden">
+    <aside class="side">
+      <div class="brand">Café Nine</div>
+      <div class="who" id="whoAmI">مدير الكافيه</div>
+      <button class="nav-btn" data-view="stats" type="button"><span class="ico">📊</span>الإحصائيات</button>
+      <button class="nav-btn" data-view="orders" type="button"><span class="ico">🧾</span>الطلبات والطاولات<span id="ordersPill" class="pill hidden">0</span></button>
+      <button class="nav-btn" data-view="menu" type="button"><span class="ico">📋</span>إدارة المنيو</button>
+      <div class="spacer"></div>
+      <div class="side-actions">
+        <button id="alertsBtn" type="button">🔔 تفعيل التنبيهات</button>
+        <button id="logoutBtn" type="button">تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Statistics -->
+      <section id="view-stats" class="hidden">
+        <div class="page-head">
+          <div><h1>الإحصائيات</h1><p class="sub" id="periodLabel">المبيعات لا تشمل الطلبات الملغاة</p></div>
+          <div class="row-actions">
+            <div class="seg" id="periodSeg">
+              <button type="button" data-period="day" class="active">اليوم</button>
+              <button type="button" data-period="week">آخر 7 أيام</button>
+              <button type="button" data-period="month">آخر 30 يومًا</button>
+            </div>
+            <button id="refreshStats" type="button" class="small-btn ghost">⟳ تحديث</button>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi hero"><div class="lab">إجمالي المبيعات</div><div class="val" id="kSales">—</div><div class="delta" id="kSalesDelta"></div></div>
+          <div class="kpi"><div class="lab">عدد الطلبات</div><div class="val" id="kOrders">—</div><div class="delta" id="kOrdersDelta"></div></div>
+          <div class="kpi"><div class="lab">متوسط قيمة الطلب</div><div class="val" id="kAvg">—</div><div class="delta" id="kAvgDelta"></div></div>
+          <div class="kpi"><div class="lab">🛵 طلبات أونلاين</div><div class="val" id="kOnline">—</div><div class="delta" id="kOnlineShare"></div></div>
+          <div class="kpi"><div class="lab">🍽️ طلبات الطاولات</div><div class="val" id="kTable">—</div><div class="delta" id="kTableShare"></div></div>
+        </div>
+
+        <div class="charts">
+          <div class="card">
+            <div class="box-header"><h2 id="salesChartTitle">المبيعات حسب الساعة</h2></div>
+            <div id="salesChart" class="chart"></div>
+            <details class="view-table"><summary>عرض كجدول</summary><div id="salesTable"></div></details>
+          </div>
+          <div class="card">
+            <div class="box-header"><h2>الأصناف الأكثر طلبًا</h2><span class="order-meta">حسب الكمية</span></div>
+            <div id="topItems" class="hbars"></div>
+          </div>
+        </div>
+
+        <div class="charts">
+          <div class="card">
+            <div class="box-header"><h2>أوقات الذروة</h2><span class="order-meta">عدد الطلبات حسب ساعة اليوم</span></div>
+            <div id="hoursChart" class="chart"></div>
+          </div>
+          <div class="card">
+            <div class="box-header"><h2>أصناف تحتاج تسويق</h2><span class="order-meta">لم تُطلب أو قليلة الطلب</span></div>
+            <div id="slowItems" class="insight-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders & tables -->
+      <section id="view-orders" class="hidden">
+        <div class="page-head">
+          <div><h1>الطلبات والطاولات</h1><p class="sub">متابعة الطلبات والتسليم — أونلاين وداخل الكافيه</p></div>
+          <button id="refreshOrders" type="button" class="small-btn ghost">⟳ تحديث</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div id="newCount" class="num">0</div><div class="lab">جديد</div></div>
+          <div class="stat"><div id="confirmedCount" class="num">0</div><div class="lab">مؤكد</div></div>
+          <div class="stat"><div id="preparingCount" class="num">0</div><div class="lab">قيد التحضير</div></div>
+          <div class="stat"><div id="readyCount" class="num">0</div><div class="lab">جاهز</div></div>
+          <div class="stat"><div id="deliveredCount" class="num">0</div><div class="lab">تم التسليم اليوم</div></div>
+        </div>
+        <div class="card">
+          <div class="box-header">
+            <h2>خريطة الطاولات</h2>
+            <button id="editFloor" type="button" class="small-btn secondary">✏️ ترتيب الطاولات</button>
+          </div>
+          <div id="floor" class="floor"></div>
+          <div class="legend">
+            <span><i style="border-color:#cfd8d3"></i>فارغة</span>
+            <span><i style="border-color:#d9a43b;background:#fff6df"></i>طلب جديد</span>
+            <span><i style="border-color:#4a7fc1;background:#eef4fc"></i>مؤكد</span>
+            <span><i style="border-color:#d9773b;background:#fdf0e6"></i>قيد التحضير</span>
+            <span><i style="border-color:#2e9b63;background:#e8f7ee"></i>جاهز</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="box-header">
+            <div class="seg" id="orderTypeSeg">
+              <button type="button" data-type="all" class="active">الكل</button>
+              <button type="button" data-type="online">🛵 أونلاين</button>
+              <button type="button" data-type="table">🍽️ الطاولات</button>
+            </div>
+            <label class="check"><input type="checkbox" id="activeOnly" /> الطلبات المفتوحة فقط</label>
+          </div>
+          <div id="tableFilterNote" class="filter-note hidden"></div>
+          <div id="ordersList" class="orders"></div>
+        </div>
+      </section>
+
+      <!-- Menu management -->
+      <section id="view-menu" class="hidden">
+        <div class="page-head">
+          <div><h1>إدارة المنيو</h1><p class="sub">التعديلات تظهر للزبائن فورًا</p></div>
+        </div>
+        <div class="card">
+          <div class="box-header"><h2>➕ إضافة صنف جديد</h2></div>
+          <div class="form-grid">
+            <input id="newArabic" type="text" placeholder="اسم الصنف بالعربي" />
+            <input id="newEnglish" type="text" placeholder="الاسم بالإنجليزي" />
+            <input id="newPrice" type="number" min="0" step="250" placeholder="السعر (IQD)" />
+            <select id="newCategory"></select>
+            <input id="newImage" type="url" placeholder="رابط صورة (اختياري)" />
+            <button id="addItem" type="button">إضافة الصنف</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="box-header"><h2>الأصناف <span class="order-meta" id="menuCount"></span></h2></div>
+          <div class="menu-tools">
+            <input id="menuSearch" type="search" placeholder="ابحث عن صنف..." />
+            <select id="menuCategory"><option value="">كل الأقسام</option></select>
+          </div>
+          <div class="table-wrap">
+            <table class="edit-table">
+              <thead><tr><th>الاسم بالعربي</th><th>بالإنجليزي</th><th style="width:120px">السعر</th><th style="width:150px">القسم</th><th>رابط الصورة</th><th style="width:140px"></th></tr></thead>
+              <tbody id="menuRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="staff.js"></script>
+  <script src="manager.js"></script>
+</body>
+</html>

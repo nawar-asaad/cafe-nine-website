@@ -164,7 +164,37 @@ revoke all on function public.place_table_order(text, jsonb, text) from public;
 grant execute on function public.table_for_token(text) to anon, authenticated;
 grant execute on function public.place_table_order(text, jsonb, text) to anon, authenticated;
 
--- To add another admin, create the account under Authentication > Users, then:
--- insert into public.admin_users (user_id)
--- select id from auth.users where email = 'someone@example.com'
--- on conflict do nothing;
+-- ---------------------------------------------------------------------------
+-- Staff roles: manager (everything) and cashier (orders + read-only menu)
+-- ---------------------------------------------------------------------------
+alter table public.admin_users add column if not exists role text not null default 'manager';
+alter table public.admin_users drop constraint if exists admin_users_role_check;
+alter table public.admin_users add constraint admin_users_role_check check (role in ('manager', 'cashier'));
+
+-- is_admin() = any staff member (reads/updates orders); is_manager() = managers only
+create or replace function public.is_manager()
+returns boolean language sql stable security invoker set search_path = public
+as $$ select exists (select 1 from public.admin_users where user_id = (select auth.uid()) and role = 'manager'); $$;
+
+drop policy if exists "Admins can manage menu" on public.menu_items;
+drop policy if exists "Managers can manage menu" on public.menu_items;
+create policy "Managers can manage menu" on public.menu_items
+for all to authenticated using (public.is_manager()) with check (public.is_manager());
+
+drop policy if exists "Admins manage tables" on public.cafe_tables;
+drop policy if exists "Managers manage tables" on public.cafe_tables;
+drop policy if exists "Staff read tables" on public.cafe_tables;
+create policy "Managers manage tables" on public.cafe_tables
+for all to authenticated using (public.is_manager()) with check (public.is_manager());
+create policy "Staff read tables" on public.cafe_tables
+for select to authenticated using (public.is_admin());
+
+-- The secret QR codes (token) are never readable from the website
+revoke select, insert, update, delete on public.cafe_tables from anon, authenticated;
+grant select (number, pos_x, pos_y, created_at) on public.cafe_tables to authenticated;
+grant update (pos_x, pos_y) on public.cafe_tables to authenticated;
+
+-- To add a staff member, create the account under Authentication > Users, then:
+-- insert into public.admin_users (user_id, role)
+-- select id, 'cashier' from auth.users where email = 'someone@example.com'   -- or 'manager'
+-- on conflict (user_id) do update set role = excluded.role;

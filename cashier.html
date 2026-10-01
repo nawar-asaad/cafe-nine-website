@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<script>if(location.hostname.endsWith('github.io'))location.replace('https://ninecafe9.netlify.app'+location.pathname.replace(/^\/cafe-nine-website/,'')+location.search+location.hash)</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الكاشير — Café Nine</title>
+  <link rel="icon" href="logo.svg" />
+  <link rel="stylesheet" href="staff.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <div id="loginView" class="login-box hidden">
+    <span class="role-tag">🧾 واجهة الكاشير</span>
+    <h1 class="title">Café Nine</h1>
+    <p class="sub">سجّل الدخول بحساب الكاشير لمتابعة الطلبات</p>
+    <form id="loginForm">
+      <label>البريد الإلكتروني <input id="email" type="email" required autocomplete="username" /></label>
+      <label>كلمة المرور <input id="password" type="password" required autocomplete="current-password" /></label>
+      <button type="submit" style="margin-top:16px">تسجيل الدخول</button>
+      <div id="loginError" class="alert error hidden"></div>
+    </form>
+    <span class="login-switch">مدير الكافيه؟ <a href="manager.html">واجهة المدير</a></span>
+  </div>
+
+  <div id="appView" class="shell hidden">
+    <aside class="side">
+      <div class="brand">Café Nine</div>
+      <div class="who" id="whoAmI">الكاشير</div>
+      <button class="nav-btn" data-view="orders" type="button"><span class="ico">🧾</span>الطلبات<span id="ordersPill" class="pill hidden">0</span></button>
+      <button class="nav-btn" data-view="menu" type="button"><span class="ico">📋</span>المنيو والأسعار</button>
+      <div class="spacer"></div>
+      <div class="side-actions">
+        <button id="alertsBtn" type="button">🔔 تفعيل التنبيهات</button>
+        <button id="logoutBtn" type="button">تسجيل الخروج</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- Orders -->
+      <section id="view-orders">
+        <div class="page-head">
+          <div><h1>الطلبات</h1><p class="sub">طلبات الأونلاين وطلبات الطاولات داخل الكافيه</p></div>
+          <button id="refreshOrders" type="button" class="small-btn ghost">⟳ تحديث</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><div id="newCount" class="num">0</div><div class="lab">جديد</div></div>
+          <div class="stat"><div id="confirmedCount" class="num">0</div><div class="lab">مؤكد</div></div>
+          <div class="stat"><div id="preparingCount" class="num">0</div><div class="lab">قيد التحضير</div></div>
+          <div class="stat"><div id="readyCount" class="num">0</div><div class="lab">جاهز</div></div>
+          <div class="stat"><div id="deliveredCount" class="num">0</div><div class="lab">تم التسليم اليوم</div></div>
+        </div>
+
+        <div class="card">
+          <div class="box-header"><h2>خريطة الطاولات</h2><span class="order-meta">اضغط على طاولة لعرض طلباتها</span></div>
+          <div id="floor" class="floor"></div>
+          <div class="legend">
+            <span><i style="border-color:#cfd8d3"></i>فارغة</span>
+            <span><i style="border-color:#d9a43b;background:#fff6df"></i>طلب جديد</span>
+            <span><i style="border-color:#4a7fc1;background:#eef4fc"></i>مؤكد</span>
+            <span><i style="border-color:#d9773b;background:#fdf0e6"></i>قيد التحضير</span>
+            <span><i style="border-color:#2e9b63;background:#e8f7ee"></i>جاهز</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="box-header">
+            <div class="seg" id="orderTypeSeg">
+              <button type="button" data-type="all" class="active">الكل</button>
+              <button type="button" data-type="online">🛵 أونلاين</button>
+              <button type="button" data-type="table">🍽️ الطاولات</button>
+            </div>
+            <label class="check"><input type="checkbox" id="activeOnly" /> الطلبات المفتوحة فقط</label>
+          </div>
+          <div id="tableFilterNote" class="filter-note hidden"></div>
+          <div id="ordersList" class="orders"></div>
+        </div>
+      </section>
+
+      <!-- Menu (read-only) -->
+      <section id="view-menu" class="hidden">
+        <div class="page-head">
+          <div><h1>المنيو والأسعار</h1><p class="sub">للاطلاع فقط — تعديل المنيو من واجهة المدير</p></div>
+        </div>
+        <div class="card">
+          <div class="menu-tools">
+            <input id="menuSearch" type="search" placeholder="ابحث عن صنف..." />
+            <select id="menuCategory"><option value="">كل الأقسام</option></select>
+          </div>
+          <div id="menuList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="staff.js"></script>
+  <script>
+    const menuList = document.getElementById("menuList");
+    const menuSearch = document.getElementById("menuSearch");
+    const menuCategory = document.getElementById("menuCategory");
+    menuCategory.insertAdjacentHTML("beforeend", Staff.CATEGORIES.map(c => `<option value="${c[0]}">${c[1]}</option>`).join(""));
+    const drawMenu = () => Staff.renderMenuReadOnly(menuList, menuSearch.value, menuCategory.value);
+    menuSearch.addEventListener("input", drawMenu);
+    menuCategory.addEventListener("change", drawMenu);
+
+    Staff.init({
+      page: "cashier",
+      allowedRoles: ["cashier", "manager"],
+      views: ["orders", "menu"],
+      wrongRoleMessage: () => "هذا الحساب ليس له صلاحية دخول.",
+      onReady: drawMenu,
+      onView: name => { if (name === "menu") Staff.loadMenu().then(drawMenu); }
+    });
+  </script>
+</body>
+</html>
