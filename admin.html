@@ -33,6 +33,7 @@
     .secondary{background:var(--brown)}
     .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
     .top-actions{display:flex;gap:10px;align-items:center}
+    .top-actions button{white-space:nowrap}
     .badge{
       display:inline-block;padding:6px 10px;border-radius:999px;background:#e7f5f0;color:var(--green);font-size:12px;font-weight:700
     }
@@ -66,6 +67,24 @@
     .alert.error{background:#fef1f1;color:#8d2b2b}
     .alert.success{background:#edf9f0;color:#1d6b46}
     .order-item.fresh{border-color:#d9b25f;box-shadow:0 0 0 3px rgba(234,216,174,.7)}
+    .floor-card{margin-bottom:20px}
+    .floor{position:relative;width:100%;aspect-ratio:2.2/1;min-height:260px;border-radius:16px;border:2px dashed var(--line);background:repeating-linear-gradient(45deg,#fbfaf6,#fbfaf6 12px,#f5f2ea 12px,#f5f2ea 24px);overflow:hidden;touch-action:none}
+    .floor .label{position:absolute;font-size:11px;color:var(--muted);padding:6px 10px}
+    .tbl{position:absolute;transform:translate(-50%,-50%);width:clamp(74px,13%,120px);aspect-ratio:1;border-radius:50%;border:3px solid #cfd8d3;background:#fff;display:grid;place-items:center;text-align:center;cursor:pointer;box-shadow:0 6px 16px rgba(4,59,54,.12);user-select:none;padding:4px;transition:box-shadow .2s}
+    .tbl strong{display:block;font-size:22px;color:var(--dark);line-height:1}
+    .tbl span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+    .tbl.st-new{border-color:#d9a43b;background:#fff6df;animation:pulse 1.4s infinite}
+    .tbl.st-confirmed{border-color:#4a7fc1;background:#eef4fc}
+    .tbl.st-preparing{border-color:#d9773b;background:#fdf0e6}
+    .tbl.st-ready{border-color:#2e9b63;background:#e8f7ee}
+    .tbl.selected{outline:3px solid var(--green);outline-offset:3px}
+    .floor.editing .tbl{cursor:grab;animation:none}
+    .floor.editing{border-color:var(--green)}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,164,59,.55)}50%{box-shadow:0 0 0 12px rgba(217,164,59,0)}}
+    .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:10px}
+    .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid;margin-left:5px;vertical-align:-2px}
+    .table-badge{display:inline-block;background:var(--dark);color:var(--gold);border-radius:999px;padding:4px 12px;font-size:14px}
+    .filter-note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#e7f5f0;color:var(--green);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:10px}
     .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:50;background:var(--dark);color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.25);font-weight:700;max-width:calc(100% - 32px)}
     @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)} .grid{grid-template-columns:1fr}}
     @media(max-width:500px){.stats{grid-template-columns:1fr} .form-grid{grid-template-columns:1fr}.toolbar{flex-direction:column;align-items:flex-start}}
@@ -111,6 +130,23 @@
       <div class="stat"><div id="deliveredCount" class="num">0</div><div class="lab">تم التسليم</div></div>
     </div>
 
+    <div class="card floor-card">
+      <div class="box-header">
+        <h2>خريطة الطاولات</h2>
+        <div class="top-actions">
+          <button id="editFloor" type="button" class="small-btn secondary">✏️ ترتيب الطاولات</button>
+        </div>
+      </div>
+      <div id="floor" class="floor"><div class="label">اضغط على طاولة لعرض طلباتها</div></div>
+      <div class="legend">
+        <span><i style="border-color:#cfd8d3"></i>فارغة</span>
+        <span><i style="border-color:#d9a43b;background:#fff6df"></i>طلب جديد</span>
+        <span><i style="border-color:#4a7fc1;background:#eef4fc"></i>مؤكد</span>
+        <span><i style="border-color:#d9773b;background:#fdf0e6"></i>قيد التحضير</span>
+        <span><i style="border-color:#2e9b63;background:#e8f7ee"></i>جاهز</span>
+      </div>
+    </div>
+
     <div class="grid">
       <div class="card">
         <div class="box-header">
@@ -118,6 +154,7 @@
           <button id="refreshOrders" type="button" class="small-btn">تحديث</button>
         </div>
 
+        <div id="tableFilterNote" class="filter-note hidden"></div>
         <div id="ordersList" class="orders"></div>
       </div>
 
@@ -180,6 +217,7 @@
         adminView.classList.remove("hidden");
         await loadOrders();
         await loadMenu();
+        await loadTables();
         startLiveUpdates();
       }
     }
@@ -206,6 +244,7 @@
       adminView.classList.remove("hidden");
       await loadOrders();
       await loadMenu();
+      await loadTables();
       startLiveUpdates();
     });
 
@@ -301,7 +340,7 @@
       playChime();
       const first = orders[0];
       showToast(orders.length === 1
-        ? `🔔 طلب جديد من ${first.customer_name || "زبون"} — ${formatMoney(first.total)}`
+        ? `🔔 طلب جديد ${orderLabel(first)} — ${formatMoney(first.total)}`
         : `🔔 وصلت ${orders.length} طلبات جديدة`);
       if (document.hidden || !document.hasFocus()) {
         unseen += orders.length;
@@ -309,8 +348,8 @@
       }
       if ("Notification" in window && Notification.permission === "granted") {
         orders.forEach(order => {
-          const n = new Notification("طلب جديد — Café Nine", {
-            body: `${order.customer_name || "زبون"} • ${formatMoney(order.total)}`,
+          const n = new Notification(order.order_type === "table" ? `🍽️ طلب طاولة ${order.table_number} — Café Nine` : "طلب جديد — Café Nine", {
+            body: `${orderLabel(order)} • ${formatMoney(order.total)}`,
             tag: "order-" + order.id,
             icon: "logo.svg",
             requireInteraction: true
@@ -323,7 +362,7 @@
     function startLiveUpdates() {
       stopLiveUpdates();
       ordersChannel = db.channel("orders-feed")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, () => loadOrders())
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => loadOrders())
         .subscribe();
       pollTimer = setInterval(loadOrders, 30000);
     }
@@ -334,6 +373,166 @@
       clearInterval(pollTimer);
       pollTimer = null;
     }
+
+    let allOrders = [];
+    let tables = [];
+    let tableFilter = null;
+    let editingFloor = false;
+    const ACTIVE = ["new", "confirmed", "preparing", "ready"];
+    const STATUS_AR = { new: "طلب جديد", confirmed: "مؤكد", preparing: "قيد التحضير", ready: "جاهز" };
+
+    function orderLabel(order) {
+      return order.order_type === "table" ? `على طاولة ${order.table_number}` : `من ${order.customer_name || "زبون"}`;
+    }
+
+    function renderOrders() {
+      const ordersList = document.getElementById("ordersList");
+      const note = document.getElementById("tableFilterNote");
+      const items = tableFilter === null ? allOrders : allOrders.filter(order => order.table_number === tableFilter);
+      if (tableFilter === null) {
+        note.classList.add("hidden");
+      } else {
+        note.classList.remove("hidden");
+        note.innerHTML = `<span>عرض طلبات طاولة ${tableFilter} فقط</span><button type="button" class="small-btn" id="clearTableFilter">عرض كل الطلبات</button>`;
+      }
+
+      ordersList.innerHTML = items.length
+        ? items.map(order => {
+            const isTable = order.order_type === "table";
+            return `
+            <div class="order-item${freshIds.has(String(order.id)) && (order.status || "new") === "new" ? " fresh" : ""}">
+              <div class="order-head">
+                <div>
+                  ${isTable
+                    ? `<h3><span class="table-badge">🍽️ طاولة ${escapeHtml(order.table_number)}</span></h3>
+                  <div class="order-meta" style="margin-top:6px;">طلب داخل الكافيه — رقم #${escapeHtml(order.id)}</div>`
+                    : `<h3>${escapeHtml(order.customer_name)}</h3>
+                  <div class="order-meta">${escapeHtml(order.customer_phone)} — توصيل #${escapeHtml(order.id)}</div>`}
+                </div>
+                <select class="status-select" data-order-id="${escapeHtml(order.id)}" data-current-status="${order.status || "new"}">
+                  <option value="new" ${order.status === "new" ? "selected" : ""}>جديد</option>
+                  <option value="confirmed" ${order.status === "confirmed" ? "selected" : ""}>مؤكد</option>
+                  <option value="preparing" ${order.status === "preparing" ? "selected" : ""}>قيد التحضير</option>
+                  <option value="ready" ${order.status === "ready" ? "selected" : ""}>جاهز</option>
+                  <option value="delivered" ${order.status === "delivered" ? "selected" : ""}>تم التسليم</option>
+                  <option value="cancelled" ${order.status === "cancelled" ? "selected" : ""}>ملغى</option>
+                </select>
+              </div>
+
+              <div class="order-meta">
+                ${new Date(order.created_at).toLocaleString("ar-IQ")}
+              </div>
+
+              ${isTable ? "" : `<div class="order-meta" style="margin-top:6px;">
+                العنوان: ${escapeHtml(order.address || "غير محدد")}
+              </div>`}
+
+              ${!isTable && safeUrl(order.map_url) ? `<div class="order-meta" style="margin-top:6px;">
+                <a href="${safeUrl(order.map_url)}" target="_blank" rel="noopener">فتح موقع الزبون</a>
+              </div>` : ""}
+
+              <ul class="item-list">
+                ${(order.items || []).map(item => `
+                  <li>
+                    ${escapeHtml(item.name)} × ${escapeHtml(item.quantity)} — ${formatMoney(item.subtotal || item.unit_price * item.quantity)}
+                  </li>
+                `).join("")}
+              </ul>
+
+              <div class="order-meta">الإجمالي: <strong style="color:#043b36">${formatMoney(order.total)}</strong></div>
+              <div class="order-meta" style="margin-top:6px;">ملاحظات: ${escapeHtml(order.notes || "لا توجد")}</div>
+            </div>
+          `;
+          }).join("")
+        : `<div class='alert error'>${tableFilter === null ? "لا توجد طلبات حتى الآن." : "لا توجد طلبات لهذه الطاولة."}</div>`;
+    }
+
+    async function loadTables() {
+      const { data, error } = await db.from("cafe_tables").select("number,pos_x,pos_y").order("number");
+      if (!error) tables = data || [];
+      renderFloor();
+    }
+
+    function renderFloor() {
+      const floor = document.getElementById("floor");
+      floor.querySelectorAll(".tbl").forEach(el => el.remove());
+      tables.forEach(t => {
+        const active = allOrders.filter(order => order.table_number === t.number && ACTIVE.includes(order.status || "new"));
+        const status = ACTIVE.find(st => active.some(order => (order.status || "new") === st));
+        const sum = active.reduce((acc, order) => acc + Number(order.total || 0), 0);
+        const el = document.createElement("div");
+        el.className = "tbl" + (status ? " st-" + status : "") + (tableFilter === t.number ? " selected" : "");
+        el.style.left = t.pos_x + "%";
+        el.style.top = t.pos_y + "%";
+        el.dataset.table = t.number;
+        el.innerHTML = `<div><strong>${t.number}</strong><span>${status ? STATUS_AR[status] : "فارغة"}</span>${active.length ? `<span>${active.length} طلب • ${formatMoney(sum)}</span>` : ""}</div>`;
+        floor.appendChild(el);
+      });
+    }
+
+    // Click a table to filter, or drag tables around while editing
+    (function setupFloor() {
+      const floor = document.getElementById("floor");
+      let drag = null;
+      floor.addEventListener("pointerdown", event => {
+        const el = event.target.closest(".tbl");
+        if (!el) return;
+        if (!editingFloor) {
+          const n = Number(el.dataset.table);
+          tableFilter = tableFilter === n ? null : n;
+          renderOrders();
+          renderFloor();
+          return;
+        }
+        drag = el;
+        el.setPointerCapture(event.pointerId);
+      });
+      floor.addEventListener("pointermove", event => {
+        if (!drag) return;
+        const box = floor.getBoundingClientRect();
+        const x = Math.min(95, Math.max(5, (event.clientX - box.left) / box.width * 100));
+        const y = Math.min(90, Math.max(10, (event.clientY - box.top) / box.height * 100));
+        drag.style.left = x + "%";
+        drag.style.top = y + "%";
+        const t = tables.find(t => t.number === Number(drag.dataset.table));
+        t.pos_x = Math.round(x * 10) / 10;
+        t.pos_y = Math.round(y * 10) / 10;
+      });
+      floor.addEventListener("pointerup", () => { drag = null; });
+    })();
+
+    document.getElementById("editFloor").addEventListener("click", async () => {
+      const btn = document.getElementById("editFloor");
+      const floor = document.getElementById("floor");
+      if (!editingFloor) {
+        editingFloor = true;
+        floor.classList.add("editing");
+        btn.textContent = "💾 حفظ الترتيب";
+        btn.classList.remove("secondary");
+        return;
+      }
+      btn.disabled = true;
+      const results = await Promise.all(tables.map(t =>
+        db.from("cafe_tables").update({ pos_x: t.pos_x, pos_y: t.pos_y }).eq("number", t.number)
+      ));
+      btn.disabled = false;
+      if (results.some(r => r.error)) {
+        alert("تعذر حفظ ترتيب الطاولات.");
+        return;
+      }
+      editingFloor = false;
+      floor.classList.remove("editing");
+      btn.textContent = "✏️ ترتيب الطاولات";
+      btn.classList.add("secondary");
+      showToast("✓ تم حفظ ترتيب الطاولات");
+    });
+
+    document.getElementById("tableFilterNote").addEventListener("click", event => {
+      if (!event.target.closest("#clearTableFilter")) return;
+      tableFilter = null;
+      renderOrders();
+      renderFloor();
+    });
 
     async function loadOrders() {
       const { data, error } = await db
@@ -370,49 +569,9 @@
       document.getElementById("readyCount").textContent = counts.ready || 0;
       document.getElementById("deliveredCount").textContent = counts.delivered || 0;
 
-      ordersList.innerHTML = items.length
-        ? items.map(order => `
-            <div class="order-item${freshIds.has(String(order.id)) && (order.status || "new") === "new" ? " fresh" : ""}">
-              <div class="order-head">
-                <div>
-                  <h3>${escapeHtml(order.customer_name)}</h3>
-                  <div class="order-meta">${escapeHtml(order.customer_phone)}</div>
-                </div>
-                <select class="status-select" data-order-id="${escapeHtml(order.id)}" data-current-status="${order.status || "new"}">
-                  <option value="new" ${order.status === "new" ? "selected" : ""}>جديد</option>
-                  <option value="confirmed" ${order.status === "confirmed" ? "selected" : ""}>مؤكد</option>
-                  <option value="preparing" ${order.status === "preparing" ? "selected" : ""}>قيد التحضير</option>
-                  <option value="ready" ${order.status === "ready" ? "selected" : ""}>جاهز</option>
-                  <option value="delivered" ${order.status === "delivered" ? "selected" : ""}>تم التسليم</option>
-                  <option value="cancelled" ${order.status === "cancelled" ? "selected" : ""}>ملغى</option>
-                </select>
-              </div>
-
-              <div class="order-meta">
-                ${new Date(order.created_at).toLocaleString("ar-IQ")}
-              </div>
-
-              <div class="order-meta" style="margin-top:6px;">
-                العنوان: ${escapeHtml(order.address || "غير محدد")}
-              </div>
-
-              ${safeUrl(order.map_url) ? `<div class="order-meta" style="margin-top:6px;">
-                <a href="${safeUrl(order.map_url)}" target="_blank" rel="noopener">فتح موقع الزبون</a>
-              </div>` : ""}
-
-              <ul class="item-list">
-                ${(order.items || []).map(item => `
-                  <li>
-                    ${escapeHtml(item.name)} × ${escapeHtml(item.quantity)} — ${formatMoney(item.subtotal || item.unit_price * item.quantity)}
-                  </li>
-                `).join("")}
-              </ul>
-
-              <div class="order-meta">الإجمالي: <strong style="color:#043b36">${formatMoney(order.total)}</strong></div>
-              <div class="order-meta" style="margin-top:6px;">ملاحظات: ${escapeHtml(order.notes || "لا توجد")}</div>
-            </div>
-          `).join("")
-        : "<div class='alert error'>لا توجد طلبات حتى الآن.</div>";
+      allOrders = items;
+      renderOrders();
+      renderFloor();
     }
 
     async function loadMenu() {
