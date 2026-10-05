@@ -22,6 +22,7 @@
       <div id="loginError" class="alert error hidden"></div>
     </form>
     <span class="login-switch">مدير الكافيه؟ <a href="manager.html">واجهة المدير</a></span>
+    <div class="staff-credit"><basira-credit></basira-credit></div>
   </div>
 
   <div id="appView" class="shell hidden">
@@ -35,6 +36,7 @@
         <button id="alertsBtn" type="button">🔔 تفعيل التنبيهات</button>
         <button id="logoutBtn" type="button">تسجيل الخروج</button>
       </div>
+      <div class="side-credit"><basira-credit></basira-credit></div>
     </aside>
 
     <main class="main">
@@ -96,6 +98,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="basira-credit.js" defer></script>
   <script src="staff.js"></script>
   <script>
     const menuList = document.getElementById("menuList");

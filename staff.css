@@ -27,6 +27,8 @@ button:disabled{opacity:.6;cursor:wait}
 .alert.info{background:#eef4f1;color:var(--green)}
 .login-switch{display:block;text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
 .login-switch a{color:var(--green);font-weight:700}
+.staff-credit{text-align:center;margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);color:var(--green)}
+.side-credit{padding:14px 10px 0;margin-top:10px;border-top:1px solid #ffffff22;color:var(--gold);font-size:11px}
 
 /* App shell */
 .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
@@ -55,7 +57,7 @@ button:disabled{opacity:.6;cursor:wait}
 @media(max-width:860px){
   .shell{grid-template-columns:1fr}
   .side{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px;gap:6px}
-  .side .brand,.side .who,.side .spacer{display:none}
+  .side .brand,.side .who,.side .spacer,.side .side-credit{display:none}
   .nav-btn{width:auto;flex:none;padding:9px 12px;font-size:13px}
   .side .side-actions{display:flex;flex:none}
   .side .side-actions button{width:auto;padding:9px 12px;font-size:12px}
