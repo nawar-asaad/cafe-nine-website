@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const config = require('./config');
 const { pickGreeting } = require('./greetings');
+const { cardCode } = require('./db');
 
 const { google, restaurant, loyalty } = config;
 const API = 'https://walletobjects.googleapis.com/walletobjects/v1';
@@ -85,18 +86,18 @@ function loyaltyObject(c) {
     id: objectId(c),
     classId: classId(),
     state: 'ACTIVE',
-    accountId: c.phone,
+    accountId: cardCode(c),
     accountName: c.name,
     loyaltyPoints: {
       label: `زياراتك من ${loyalty.stampsForReward}`,
       balance: { int: c.stamps },
     },
     secondaryLoyaltyPoints: { label: 'المكافآت', balance: { int: c.rewards } },
-    barcode: { type: 'QR_CODE', value: c.serial, alternateText: c.phone.slice(-4) },
+    barcode: { type: 'QR_CODE', value: c.serial, alternateText: cardCode(c) },
     merchantLocations: location(),
     textModulesData: [
       { id: 'news', header: 'آخر الأخبار', body: c.message || pickGreeting(c.updated_at + c.id) },
-      { id: 'how', header: 'شلون تشتغل البطاقة؟', body: `كل زيارة ختم، و${loyalty.stampsForReward} أختام = ${loyalty.reward}.` },
+      { id: 'how', header: 'شلون تشتغل البطاقة؟', body: `كل زيارة ختم (ختم واحد باليوم)، و${loyalty.stampsForReward} أختام = ${loyalty.reward}.` },
     ],
   };
 }

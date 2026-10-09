@@ -28,9 +28,10 @@
 
   <section data-panel="cashier" class="card">
     <h2>تسجيل زيارة</h2>
-    <input id="q" type="search" placeholder="ابحث بالاسم أو الرقم، أو امسح رمز بطاقة الزبون">
+    <input id="q" type="search" placeholder="امسح رمز البطاقة، أو اكتب رمزها، أو ابحث بالاسم أو الرقم">
+    <p class="muted" style="margin:6px 0 0">ختم واحد لكل بطاقة باليوم.</p>
     <div class="tablewrap"><table>
-      <thead><tr><th>الاسم</th><th>الهاتف</th><th>الأختام</th><th>مكافآت</th><th>الزيارات</th><th>البطاقة</th><th></th></tr></thead>
+      <thead><tr><th>الاسم</th><th>رمز البطاقة</th><th>الهاتف</th><th>الأختام</th><th>مكافآت</th><th>الزيارات</th><th>البطاقة</th><th></th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
   </section>
@@ -40,7 +41,7 @@
     <textarea id="btext" maxlength="300" placeholder="مثال: اليوم عدنا سمچ مسگوف طازة من الشط، تعال ولا تفوّتها 🐟"></textarea>
     <div class="checks">
       <label><input type="checkbox" value="wallet" checked> إشعار على البطاقة (مجاني)</label>
-      <label><input type="checkbox" value="sms"> رسالة SMS (مدفوعة حسب البوابة)</label>
+      <label><input type="checkbox" value="sms"> رسالة SMS لمن أعطى رقمه (مدفوعة حسب البوابة)</label>
     </div>
     <button id="send" class="btn">إرسال</button>
     <p id="bmsg" class="msg" role="status"></p>
@@ -53,9 +54,9 @@
 
   <section data-panel="paper" class="card hidden">
     <h2>إدخال بيانات الاستبيان الورقي</h2>
-    <p class="muted">أدخل فقط من أشّر على خانة الموافقة في الورقة.</p>
+    <p class="muted">الرقم اختياري: اكتبه فقط إذا الزبون كتبه وأشّر على خانة الموافقة في الورقة.</p>
     <label for="pname">الاسم</label><input id="pname" type="text">
-    <label for="pphone">رقم الهاتف</label><input id="pphone" type="tel" dir="ltr" style="text-align:right">
+    <label for="pphone">رقم الهاتف (اختياري)</label><input id="pphone" type="tel" dir="ltr" style="text-align:right">
     <div class="grid" style="margin-top:12px">
       <label>الأكل (1-5)<input id="pfood" type="text" inputmode="numeric"></label>
       <label>الخدمة (1-5)<input id="pservice" type="text" inputmode="numeric"></label>
@@ -106,7 +107,7 @@ document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
 async function loadSummary() {
   const s = await api('/summary');
   const tile = (n, l) => `<div class="stat"><b>${esc(n)}</b><span>${l}</span></div>`;
-  $('stats').innerHTML = tile(s.customers, 'زبون مسجّل') + tile(s.subscribed, 'مشترك بالرسائل')
+  $('stats').innerHTML = tile(s.customers, 'زبون مسجّل') + tile(s.subscribed, 'مشترك بالـ SMS')
     + tile(s.appleDevices, 'بطاقة على آيفون') + tile(s.visits, 'زيارة مسجّلة')
     + tile(s.ratings.food ?? '–', 'تقييم الأكل') + tile(s.ratings.service ?? '–', 'تقييم الخدمة');
   $('status').textContent = `Apple Wallet: ${s.apple ? 'جاهز' : 'غير مُعدّ'} · Google Wallet: ${s.google ? 'جاهز' : 'غير مُعدّ'} · SMS: ${s.smsProvider}`;
@@ -116,12 +117,13 @@ async function loadCustomers() {
   const rows = await api(`/customers?q=${encodeURIComponent($('q').value)}`);
   $('rows').innerHTML = rows.map((c) => `<tr>
     <td>${esc(c.name)} ${c.opted_out ? '<span class="pill off">أوقف الرسائل</span>' : ''}</td>
-    <td dir="ltr" class="num">${esc(c.phone)}</td>
+    <td dir="ltr" class="num">${esc(c.code)}</td>
+    <td dir="ltr" class="num">${c.phone ? esc(c.phone) : '<span class="muted">–</span>'}</td>
     <td class="num">${c.stamps}</td><td class="num">${c.rewards}</td><td class="num">${c.visits}</td>
     <td>${c.on_iphone ? '<span class="pill ok">آيفون</span>' : ''} <a href="/c/${esc(c.serial)}" target="_blank">فتح</a></td>
     <td><button class="btn small" data-stamp="${c.id}">+ ختم</button>
         ${c.rewards ? `<button class="btn small ghost" data-redeem="${c.id}">صرف مكافأة</button>` : ''}</td>
-  </tr>`).join('') || '<tr><td colspan="7" class="muted">لا يوجد زبائن بعد</td></tr>';
+  </tr>`).join('') || '<tr><td colspan="8" class="muted">لا يوجد زبائن بعد</td></tr>';
 }
 
 $('rows').onclick = async (e) => {
@@ -145,7 +147,7 @@ $('send').onclick = async () => {
   try {
     const r = await api('/broadcast', { method: 'POST', body: { text: $('btext').value, channels } });
     $('bmsg').className = 'msg ok';
-    $('bmsg').textContent = `تم: ${r.recipients} مشترك · ${r.wallet} إشعار بطاقة · ${r.sms} SMS`;
+    $('bmsg').textContent = `تم: ${r.recipients} مشترك (${r.withPhone} عندهم رقم) · ${r.wallet} إشعار بطاقة · ${r.sms} SMS`;
     loadCampaigns();
   } catch (err) { $('bmsg').className = 'msg err'; $('bmsg').textContent = err.message; }
   $('send').disabled = false;

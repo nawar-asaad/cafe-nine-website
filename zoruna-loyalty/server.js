@@ -31,14 +31,24 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// تسجيل زبون من استبيان رمز QR (أو من نموذج الورق عبر لوحة الإدارة)
+// الرقم اختياري. إذا كُتب يجب أن يكون صحيحاً، ويحتاج موافقة على الرسائل.
+// يرجع { phone } أو { error }
+function readPhone(b, requireConsent) {
+  const raw = String(b.phone || '').trim();
+  if (!raw) return { phone: null };
+  const phone = store.normalizePhone(raw);
+  if (!phone) return { error: 'رقم الهاتف غير صحيح (مثال: 07701234567)' };
+  if (requireConsent && b.consent !== true) return { error: 'أشّر على الموافقة حتى نحفظ رقمك، أو امسح الرقم' };
+  return { phone };
+}
+
+// تسجيل زبون من استبيان رمز QR
 app.post('/api/join', express.json(), (req, res) => {
   const b = req.body || {};
   const name = String(b.name || '').trim().slice(0, 80);
-  const phone = store.normalizePhone(b.phone);
   if (!name) return res.status(400).json({ error: 'اكتب اسمك رجاءً' });
-  if (!phone) return res.status(400).json({ error: 'رقم الهاتف غير صحيح (مثال: 07701234567)' });
-  if (b.consent !== true) return res.status(400).json({ error: 'نحتاج موافقتك حتى نرسل لك التحديثات' });
+  const { phone, error } = readPhone(b, true);
+  if (error) return res.status(400).json({ error });
 
   const c = store.upsertCustomer({ name, phone, source: 'qr' });
   if (b.food || b.service || b.place || b.comment) store.addFeedback(c.id, b);
@@ -52,6 +62,8 @@ app.get('/api/card/:serial', (req, res) => {
   if (google.isConfigured()) googleUrl = google.saveUrl(c);
   res.json({
     name: c.name,
+    code: store.cardCode(c),
+    hasPhone: Boolean(c.phone),
     stamps: c.stamps,
     rewards: c.rewards,
     optedOut: Boolean(c.opted_out),
@@ -61,6 +73,18 @@ app.get('/api/card/:serial', (req, res) => {
     apple: apple.isConfigured(),
     googleUrl,
   });
+});
+
+// الزبون يضيف رقمه لاحقاً من صفحة بطاقته (لاسترجاعها إذا ضاع تلفونه)
+app.post('/api/card/:serial/phone', express.json(), (req, res) => {
+  const c = store.getBySerial(req.params.serial);
+  if (!c) return res.sendStatus(404);
+  const { phone, error } = readPhone(req.body || {}, true);
+  if (error || !phone) return res.status(400).json({ error: error || 'اكتب رقمك' });
+  if (!store.setPhone(c.id, phone)) {
+    return res.status(409).json({ error: 'هذا الرقم مسجّل ببطاقة ثانية. راجع الكاشير حتى يرجّعلك بطاقتك' });
+  }
+  res.sendStatus(200);
 });
 
 app.get('/pass/:serial.pkpass', async (req, res, next) => {
@@ -116,7 +140,7 @@ admin.get('/summary', (req, res) => {
     google: google.isConfigured(),
     smsProvider: config.sms.provider,
     customers: one('SELECT COUNT(*) n FROM customers').n,
-    subscribed: one('SELECT COUNT(*) n FROM customers WHERE opted_out = 0').n,
+    subscribed: one('SELECT COUNT(*) n FROM customers WHERE phone IS NOT NULL AND opted_out = 0').n,
     appleDevices: one('SELECT COUNT(DISTINCT serial) n FROM apple_devices').n,
     visits: one('SELECT COALESCE(SUM(visits),0) n FROM customers').n,
     ratings: one(`SELECT ROUND(AVG(food),1) food, ROUND(AVG(service),1) service, ROUND(AVG(place),1) place,
@@ -125,14 +149,17 @@ admin.get('/summary', (req, res) => {
 });
 
 admin.get('/customers', (req, res) => {
-  const s = `%${String(req.query.q || '').trim()}%`;
+  const text = String(req.query.q || '').trim();
+  const s = `%${text}%`;
+  // البحث برمز البطاقة القصير (6 أحرف) أو بالرقم التسلسلي الكامل من مسح QR
+  const serialPrefix = text.length >= 4 ? `${text.toLowerCase()}%` : '\u0000';
   const rows = store.db
     .prepare(`SELECT id, name, phone, serial, stamps, visits, rewards, opted_out, created_at, last_visit_at,
                      (SELECT COUNT(*) FROM apple_devices d WHERE d.serial = c.serial) AS on_iphone
-              FROM customers c WHERE name LIKE ? OR phone LIKE ? OR serial = ?
+              FROM customers c WHERE name LIKE ? OR phone LIKE ? OR serial LIKE ?
               ORDER BY COALESCE(last_visit_at, created_at) DESC LIMIT 200`)
-    .all(s, s, String(req.query.q || ''));
-  res.json(rows);
+    .all(s, s, serialPrefix);
+  res.json(rows.map((r) => ({ ...r, code: store.cardCode(r) })));
 });
 
 admin.get('/feedback', (req, res) => {
@@ -144,12 +171,14 @@ admin.get('/feedback', (req, res) => {
   );
 });
 
-// إدخال بيانات نموذج الاستبيان الورقي يدوياً
+// إدخال بيانات نموذج الاستبيان الورقي يدوياً.
+// الموظف يكتب الرقم فقط إذا أشّر الزبون على خانة الموافقة في الورقة.
 admin.post('/customers', (req, res) => {
   const b = req.body || {};
-  const phone = store.normalizePhone(b.phone);
   const name = String(b.name || '').trim().slice(0, 80);
-  if (!name || !phone) return res.status(400).json({ error: 'الاسم أو الرقم غير صحيح' });
+  if (!name) return res.status(400).json({ error: 'اكتب الاسم' });
+  const { phone, error } = readPhone(b, false);
+  if (error) return res.status(400).json({ error });
   const c = store.upsertCustomer({ name, phone, source: 'paper' });
   store.addFeedback(c.id, b);
   res.json(c);
@@ -171,10 +200,11 @@ async function syncWallets(c, notifyText) {
   return results;
 }
 
-// تسجيل زيارة: الكاشير يبحث بالرقم أو يمسح رمز البطاقة
+// تسجيل زيارة: الكاشير يمسح رمز البطاقة أو يبحث بالاسم أو الرقم. ختم واحد باليوم.
 admin.post('/customers/:id/stamp', async (req, res) => {
-  const r = store.addStamp(Number(req.params.id), config.loyalty.stampsForReward);
+  const r = store.addStamp(Number(req.params.id), config.loyalty.stampsForReward, config.loyalty.timezoneOffset);
   if (!r) return res.sendStatus(404);
+  if (r.alreadyToday) return res.status(409).json({ error: 'هذا الزبون أخذ ختم اليوم. الختم الجاي باچر إن شاء الله' });
   const text = r.earnedReward
     ? `مبروك! كمّلت البطاقة وصارت عندك ${config.loyalty.reward} 🎉`
     : null;
@@ -227,7 +257,7 @@ admin.post('/broadcast', async (req, res) => {
   }
 
   if (channels.has('sms')) {
-    for (const c of customers) {
+    for (const c of customers.filter((x) => x.phone)) {
       try {
         if (await sms.send(c.phone, sms.withOptOut(text, c.serial))) sent += 1;
       } catch (e) {
@@ -239,7 +269,7 @@ admin.post('/broadcast', async (req, res) => {
   store.db
     .prepare('INSERT INTO campaigns (text, channels, wallet, sms) VALUES (?, ?, ?, ?)')
     .run(text, [...channels].join(','), wallet, sent);
-  res.json({ recipients: customers.length, wallet, sms: sent });
+  res.json({ recipients: customers.length, withPhone: customers.filter((c) => c.phone).length, wallet, sms: sent });
 });
 
 admin.get('/campaigns', (req, res) => {

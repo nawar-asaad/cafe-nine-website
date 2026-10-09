@@ -77,12 +77,12 @@ async function buildPass(customer) {
   pass.backFields.push(
     // تغيّر هذا الحقل يُظهر للزبون إشعاراً بنص الرسالة (changeMessage)
     { key: 'news', label: 'آخر الأخبار', value: customer.message || greeting, changeMessage: '%@' },
-    { key: 'how', label: 'شلون تشتغل البطاقة؟', value: `كل زيارة ختم، و${loyalty.stampsForReward} أختام = ${loyalty.reward}. اعرض البطاقة على الكاشير.` },
+    { key: 'how', label: 'شلون تشتغل البطاقة؟', value: `كل زيارة ختم (ختم واحد باليوم)، و${loyalty.stampsForReward} أختام = ${loyalty.reward}. اعرض البطاقة على الكاشير.` },
     { key: 'phone', label: 'هاتف المطعم', value: restaurant.phone },
     { key: 'privacy', label: 'الخصوصية', value: 'المطعم لا يعرف موقعك. الهاتف نفسه يقارن موقعك بموقع المطعم ويعرض التذكير. لإيقاف التذكير: أطفئ «اقتراحات على شاشة القفل» من إعدادات البطاقة أو احذفها.' },
   );
   pass.setLocations({ latitude: restaurant.lat, longitude: restaurant.lng, relevantText: greeting });
-  pass.setBarcodes({ message: customer.serial, format: 'PKBarcodeFormatQR', messageEncoding: 'iso-8859-1', altText: customer.phone.slice(-4) });
+  pass.setBarcodes({ message: customer.serial, format: 'PKBarcodeFormatQR', messageEncoding: 'iso-8859-1', altText: store.cardCode(customer) });
 
   return pass.getAsBuffer();
 }

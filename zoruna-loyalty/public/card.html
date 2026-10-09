@@ -26,6 +26,20 @@
     <a id="apple" class="btn dark hidden" href="#">أضف إلى Apple Wallet</a>
     <a id="google" class="btn dark hidden" href="#" target="_blank" rel="noopener">أضف إلى Google Wallet</a>
     <p id="nowallet" class="muted hidden">إضافة البطاقة للمحفظة راح تتوفر قريباً. احتفظ بهذا الرابط واعرضه على الكاشير بكل زيارة.</p>
+    <p class="muted">البطاقة توصلها أخبار وعروض المطعم كإشعار، وتگدر تطفيها من إعدادات البطاقة بالمحفظة.</p>
+  </section>
+
+  <section id="phoneBox" class="card hidden">
+    <h2>احفظ أختامك</h2>
+    <p class="muted" style="margin:0">إذا ضاع تلفونك أو بدّلته، رقمك يخلّي الكاشير يرجّعلك بطاقتك بأختامها. اختياري.</p>
+    <label for="phone">رقم الهاتف</label>
+    <input id="phone" type="tel" inputmode="tel" placeholder="07xxxxxxxxx" dir="ltr" style="text-align:right">
+    <label class="consent">
+      <input id="consent" type="checkbox">
+      <span>أوافق على استخدام رقمي لإرسال تحديثات وعروض المطعم وللسؤال عن رضاي، وأگدر ألغي بأي وقت.</span>
+    </label>
+    <button id="savePhone" class="btn ghost">احفظ رقمي</button>
+    <p id="pmsg" class="msg" role="status"></p>
   </section>
 
   <section class="card">
@@ -36,7 +50,8 @@
   <section class="card" style="text-align:center">
     <h2>رمز البطاقة</h2>
     <img id="qr" alt="رمز البطاقة" width="180" height="180" style="background:#fff;border-radius:8px;padding:6px">
-    <p class="muted">اعرضه على الكاشير حتى ياخذ ختم زيارتك</p>
+    <p><b id="code" dir="ltr" style="font-size:1.3rem;letter-spacing:3px"></b></p>
+    <p class="muted">اعرضه على الكاشير حتى ياخذ ختم زيارتك (ختم واحد باليوم)</p>
   </section>
 
   <footer><basira-credit></basira-credit></footer>
@@ -58,6 +73,8 @@ fetch(`/api/card/${encodeURIComponent(serial)}`).then((r) => {
     ? `عندك ${c.rewards} ${c.reward} 🎉 اطلبها من الكاشير`
     : `باقي ${c.stampsForReward - c.stamps} زيارات على ${c.reward}`;
   $('qr').src = `/qr.svg?d=${encodeURIComponent(serial)}`;
+  $('code').textContent = c.code;
+  if (!c.hasPhone) $('phoneBox').classList.remove('hidden');
 
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod|Macintosh/.test(ua);
@@ -66,6 +83,20 @@ fetch(`/api/card/${encodeURIComponent(serial)}`).then((r) => {
   if (c.googleUrl && !ios) { $('google').href = c.googleUrl; $('google').classList.remove('hidden'); }
   if ($('apple').classList.contains('hidden') && $('google').classList.contains('hidden')) $('nowallet').classList.remove('hidden');
 }).catch(() => { $('hello').textContent = 'البطاقة غير موجودة'; });
+
+$('savePhone').onclick = async () => {
+  const m = $('pmsg');
+  const r = await fetch(`/api/card/${encodeURIComponent(serial)}/phone`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: $('phone').value, consent: $('consent').checked }),
+  });
+  if (r.ok) {
+    m.className = 'msg ok'; m.textContent = 'انحفظ رقمك، وأختامك صارت بأمان 💛';
+    $('savePhone').disabled = true;
+  } else {
+    m.className = 'msg err'; m.textContent = (await r.json().catch(() => ({}))).error || 'صار خطأ';
+  }
+};
 </script>
 </body>
 </html>
