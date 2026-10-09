@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>رأيك يهمنا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="/logo.svg">
+</head>
+<body>
+<main class="wrap">
+  <header class="brand">
+    <img src="/logo.svg" alt="">
+    <div><h1 id="rname">رأيك يهمنا</h1><p>دقيقة وحدة من وقتك… وتطلع ويّاك بطاقة ولاء</p></div>
+  </header>
+
+  <form id="f" class="card" novalidate>
+    <h2>شلون كانت تجربتك اليوم؟</h2>
+    <div class="row"><span>الأكل</span><div class="stars" data-name="food"></div></div>
+    <div class="row"><span>الخدمة</span><div class="stars" data-name="service"></div></div>
+    <div class="row"><span>المكان والگعدة</span><div class="stars" data-name="place"></div></div>
+
+    <label for="comment">ملاحظاتك (اختياري)</label>
+    <textarea id="comment" maxlength="1000" placeholder="شنو عجبك؟ وشنو نگدر نحسّنه؟"></textarea>
+
+    <h2 style="margin-top:22px">بطاقة الولاء</h2>
+    <p class="muted" style="margin:0">كل زيارة بختم، و<span id="n">8</span> أختام = <span id="reward">وجبة مجانية</span>.</p>
+
+    <label for="name">الاسم</label>
+    <input id="name" type="text" autocomplete="name" required maxlength="80">
+
+    <label for="phone">رقم الهاتف</label>
+    <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07xxxxxxxxx" required dir="ltr" style="text-align:right">
+
+    <label class="consent">
+      <input id="consent" type="checkbox">
+      <span>أوافق على استخدام اسمي ورقمي لإرسال آخر تحديثات وعروض المطعم، وللسؤال عن رضاي مستقبلاً. أگدر ألغي بأي وقت.</span>
+    </label>
+
+    <button class="btn" type="submit">أرسل وخذ بطاقتي</button>
+    <p id="msg" class="msg" role="status"></p>
+  </form>
+
+  <footer><basira-credit></basira-credit></footer>
+</main>
+<script src="/basira-credit.js"></script>
+<script>
+const ratings = {};
+document.querySelectorAll('.stars').forEach((box) => {
+  for (let i = 5; i >= 1; i--) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = '★'; b.setAttribute('aria-label', `${i} من 5`);
+    b.onclick = () => {
+      ratings[box.dataset.name] = i;
+      box.querySelectorAll('button').forEach((x, k) => x.classList.toggle('on', 5 - k <= i));
+    };
+    box.append(b);
+  }
+});
+
+fetch('/api/info').then((r) => r.json()).then((i) => {
+  document.title = `${i.name} · رأيك يهمنا`;
+  document.getElementById('rname').textContent = i.name;
+  document.getElementById('n').textContent = i.stampsForReward;
+  document.getElementById('reward').textContent = i.reward;
+});
+
+const msg = document.getElementById('msg');
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/join', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...ratings,
+        comment: document.getElementById('comment').value,
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        consent: document.getElementById('consent').checked,
+      }),
+    });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'صار خطأ، حاول مرة ثانية');
+    location.href = j.cardUrl;
+  } catch (err) {
+    msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>

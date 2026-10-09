@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة زورونا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="/logo.svg">
+</head>
+<body>
+<main class="wrap wide">
+  <header class="brand">
+    <img src="/logo.svg" alt="">
+    <div><h1>لوحة برنامج الولاء</h1><p id="status" class="muted"></p></div>
+  </header>
+
+  <div class="grid" id="stats"></div>
+
+  <nav class="tabs">
+    <button data-tab="cashier" class="on">الكاشير</button>
+    <button data-tab="broadcast">إرسال رسالة</button>
+    <button data-tab="paper">إدخال استبيان ورقي</button>
+    <button data-tab="feedback">آراء الزبائن</button>
+    <button data-tab="tools">أدوات</button>
+  </nav>
+
+  <section data-panel="cashier" class="card">
+    <h2>تسجيل زيارة</h2>
+    <input id="q" type="search" placeholder="ابحث بالاسم أو الرقم، أو امسح رمز بطاقة الزبون">
+    <div class="tablewrap"><table>
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>الأختام</th><th>مكافآت</th><th>الزيارات</th><th>البطاقة</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+
+  <section data-panel="broadcast" class="card hidden">
+    <h2>رسالة لكل المشتركين</h2>
+    <textarea id="btext" maxlength="300" placeholder="مثال: اليوم عدنا سمچ مسگوف طازة من الشط، تعال ولا تفوّتها 🐟"></textarea>
+    <div class="checks">
+      <label><input type="checkbox" value="wallet" checked> إشعار على البطاقة (مجاني)</label>
+      <label><input type="checkbox" value="sms"> رسالة SMS (مدفوعة حسب البوابة)</label>
+    </div>
+    <button id="send" class="btn">إرسال</button>
+    <p id="bmsg" class="msg" role="status"></p>
+    <h2 style="margin-top:24px">الرسائل السابقة</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>التاريخ</th><th>النص</th><th>بطاقات</th><th>SMS</th></tr></thead>
+      <tbody id="camps"></tbody>
+    </table></div>
+  </section>
+
+  <section data-panel="paper" class="card hidden">
+    <h2>إدخال بيانات الاستبيان الورقي</h2>
+    <p class="muted">أدخل فقط من أشّر على خانة الموافقة في الورقة.</p>
+    <label for="pname">الاسم</label><input id="pname" type="text">
+    <label for="pphone">رقم الهاتف</label><input id="pphone" type="tel" dir="ltr" style="text-align:right">
+    <div class="grid" style="margin-top:12px">
+      <label>الأكل (1-5)<input id="pfood" type="text" inputmode="numeric"></label>
+      <label>الخدمة (1-5)<input id="pservice" type="text" inputmode="numeric"></label>
+      <label>المكان (1-5)<input id="pplace" type="text" inputmode="numeric"></label>
+    </div>
+    <label for="pcomment">الملاحظات</label><textarea id="pcomment"></textarea>
+    <button id="padd" class="btn">حفظ</button>
+    <p id="pmsg" class="msg" role="status"></p>
+  </section>
+
+  <section data-panel="feedback" class="card hidden">
+    <h2>آخر الآراء</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>التاريخ</th><th>الاسم</th><th>أكل</th><th>خدمة</th><th>مكان</th><th>ملاحظة</th></tr></thead>
+      <tbody id="fb"></tbody>
+    </table></div>
+  </section>
+
+  <section data-panel="tools" class="card hidden">
+    <h2>أدوات</h2>
+    <p><a class="btn ghost small" href="/print" target="_blank">طباعة ورقة الاستبيان مع رمز QR</a></p>
+    <p><a class="btn ghost small" href="/api/admin/export.csv">تنزيل قائمة الزبائن (CSV)</a></p>
+  </section>
+
+  <footer><basira-credit></basira-credit></footer>
+</main>
+<script src="/basira-credit.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const api = async (path, opts = {}) => {
+  const r = await fetch(`/api/admin${path}`, {
+    ...opts, headers: { 'Content-Type': 'application/json' },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const j = r.headers.get('content-type')?.includes('json') ? await r.json() : null;
+  if (!r.ok) throw new Error(j?.error || `خطأ ${r.status}`);
+  return j;
+};
+
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+  document.querySelectorAll('[data-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== b.dataset.tab));
+  if (b.dataset.tab === 'feedback') loadFeedback();
+  if (b.dataset.tab === 'broadcast') loadCampaigns();
+});
+
+async function loadSummary() {
+  const s = await api('/summary');
+  const tile = (n, l) => `<div class="stat"><b>${esc(n)}</b><span>${l}</span></div>`;
+  $('stats').innerHTML = tile(s.customers, 'زبون مسجّل') + tile(s.subscribed, 'مشترك بالرسائل')
+    + tile(s.appleDevices, 'بطاقة على آيفون') + tile(s.visits, 'زيارة مسجّلة')
+    + tile(s.ratings.food ?? '–', 'تقييم الأكل') + tile(s.ratings.service ?? '–', 'تقييم الخدمة');
+  $('status').textContent = `Apple Wallet: ${s.apple ? 'جاهز' : 'غير مُعدّ'} · Google Wallet: ${s.google ? 'جاهز' : 'غير مُعدّ'} · SMS: ${s.smsProvider}`;
+}
+
+async function loadCustomers() {
+  const rows = await api(`/customers?q=${encodeURIComponent($('q').value)}`);
+  $('rows').innerHTML = rows.map((c) => `<tr>
+    <td>${esc(c.name)} ${c.opted_out ? '<span class="pill off">أوقف الرسائل</span>' : ''}</td>
+    <td dir="ltr" class="num">${esc(c.phone)}</td>
+    <td class="num">${c.stamps}</td><td class="num">${c.rewards}</td><td class="num">${c.visits}</td>
+    <td>${c.on_iphone ? '<span class="pill ok">آيفون</span>' : ''} <a href="/c/${esc(c.serial)}" target="_blank">فتح</a></td>
+    <td><button class="btn small" data-stamp="${c.id}">+ ختم</button>
+        ${c.rewards ? `<button class="btn small ghost" data-redeem="${c.id}">صرف مكافأة</button>` : ''}</td>
+  </tr>`).join('') || '<tr><td colspan="7" class="muted">لا يوجد زبائن بعد</td></tr>';
+}
+
+$('rows').onclick = async (e) => {
+  const id = e.target.dataset.stamp || e.target.dataset.redeem;
+  if (!id) return;
+  e.target.disabled = true;
+  try {
+    const r = await api(`/customers/${id}/${e.target.dataset.stamp ? 'stamp' : 'redeem'}`, { method: 'POST' });
+    if (r.earnedReward) alert('🎉 الزبون كمّل البطاقة واستحق المكافأة');
+  } catch (err) { alert(err.message); }
+  loadCustomers(); loadSummary();
+};
+
+let t;
+$('q').oninput = () => { clearTimeout(t); t = setTimeout(loadCustomers, 250); };
+
+$('send').onclick = async () => {
+  const channels = [...document.querySelectorAll('[data-panel=broadcast] input:checked')].map((i) => i.value);
+  if (!confirm('ترسل الرسالة لكل المشتركين؟')) return;
+  $('send').disabled = true;
+  try {
+    const r = await api('/broadcast', { method: 'POST', body: { text: $('btext').value, channels } });
+    $('bmsg').className = 'msg ok';
+    $('bmsg').textContent = `تم: ${r.recipients} مشترك · ${r.wallet} إشعار بطاقة · ${r.sms} SMS`;
+    loadCampaigns();
+  } catch (err) { $('bmsg').className = 'msg err'; $('bmsg').textContent = err.message; }
+  $('send').disabled = false;
+};
+
+async function loadCampaigns() {
+  const rows = await api('/campaigns');
+  $('camps').innerHTML = rows.map((c) => `<tr><td>${esc(c.created_at)}</td><td style="white-space:normal">${esc(c.text)}</td>
+    <td class="num">${c.wallet}</td><td class="num">${c.sms}</td></tr>`).join('');
+}
+
+async function loadFeedback() {
+  const rows = await api('/feedback');
+  $('fb').innerHTML = rows.map((f) => `<tr><td>${esc(f.created_at)}</td><td>${esc(f.name)}</td>
+    <td class="num">${f.food ?? ''}</td><td class="num">${f.service ?? ''}</td><td class="num">${f.place ?? ''}</td>
+    <td style="white-space:normal">${esc(f.comment)}</td></tr>`).join('');
+}
+
+$('padd').onclick = async () => {
+  try {
+    await api('/customers', { method: 'POST', body: {
+      name: $('pname').value, phone: $('pphone').value, food: $('pfood').value,
+      service: $('pservice').value, place: $('pplace').value, comment: $('pcomment').value,
+    } });
+    $('pmsg').className = 'msg ok'; $('pmsg').textContent = 'تم الحفظ';
+    ['pname', 'pphone', 'pfood', 'pservice', 'pplace', 'pcomment'].forEach((i) => $(i).value = '');
+    loadSummary(); loadCustomers();
+  } catch (err) { $('pmsg').className = 'msg err'; $('pmsg').textContent = err.message; }
+};
+
+loadSummary(); loadCustomers();
+</script>
+</body>
+</html>

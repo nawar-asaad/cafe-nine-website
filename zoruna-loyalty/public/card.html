@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بطاقة الولاء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="/logo.svg">
+</head>
+<body>
+<main class="wrap">
+  <header class="brand">
+    <img src="/logo.svg" alt="">
+    <div><h1 id="rname">بطاقة الولاء</h1><p id="hello"></p></div>
+  </header>
+
+  <section class="card greeting"><p>تسلم على رأيك! هسه ضيف البطاقة لمحفظة تلفونك حتى نذكّرك بينا من تمرّ يمّنا 💛</p></section>
+
+  <section class="card">
+    <h2>أختامك</h2>
+    <div id="stamps" class="stamps"></div>
+    <p class="muted" id="progress"></p>
+
+    <a id="apple" class="btn dark hidden" href="#">أضف إلى Apple Wallet</a>
+    <a id="google" class="btn dark hidden" href="#" target="_blank" rel="noopener">أضف إلى Google Wallet</a>
+    <p id="nowallet" class="muted hidden">إضافة البطاقة للمحفظة راح تتوفر قريباً. احتفظ بهذا الرابط واعرضه على الكاشير بكل زيارة.</p>
+  </section>
+
+  <section class="card">
+    <h2>شلون يشتغل التذكير؟</h2>
+    <p class="muted" style="margin:0">من تمرّ قرب المطعم، تلفونك يطلع لك رسالة ترحيب على شاشة القفل. المطعم ما يعرف موقعك أبداً: التلفون نفسه هو اللي يقارن. تگدر توقف التذكير من إعدادات البطاقة بالمحفظة.</p>
+  </section>
+
+  <section class="card" style="text-align:center">
+    <h2>رمز البطاقة</h2>
+    <img id="qr" alt="رمز البطاقة" width="180" height="180" style="background:#fff;border-radius:8px;padding:6px">
+    <p class="muted">اعرضه على الكاشير حتى ياخذ ختم زيارتك</p>
+  </section>
+
+  <footer><basira-credit></basira-credit></footer>
+</main>
+<script src="/basira-credit.js"></script>
+<script>
+const serial = location.pathname.split('/').pop();
+const $ = (id) => document.getElementById(id);
+fetch(`/api/card/${encodeURIComponent(serial)}`).then((r) => {
+  if (!r.ok) throw new Error();
+  return r.json();
+}).then((c) => {
+  document.title = `${c.restaurant} · بطاقة الولاء`;
+  $('rname').textContent = c.restaurant;
+  $('hello').textContent = `هلا ${c.name}`;
+  $('stamps').innerHTML = Array.from({ length: c.stampsForReward }, (_, i) =>
+    `<div class="stamp ${i < c.stamps ? 'on' : ''}">${i < c.stamps ? '✓' : ''}</div>`).join('');
+  $('progress').textContent = c.rewards
+    ? `عندك ${c.rewards} ${c.reward} 🎉 اطلبها من الكاشير`
+    : `باقي ${c.stampsForReward - c.stamps} زيارات على ${c.reward}`;
+  $('qr').src = `/qr.svg?d=${encodeURIComponent(serial)}`;
+
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod|Macintosh/.test(ua);
+  const android = /Android/.test(ua);
+  if (c.apple && !android) { $('apple').href = `/pass/${serial}.pkpass`; $('apple').classList.remove('hidden'); }
+  if (c.googleUrl && !ios) { $('google').href = c.googleUrl; $('google').classList.remove('hidden'); }
+  if ($('apple').classList.contains('hidden') && $('google').classList.contains('hidden')) $('nowallet').classList.remove('hidden');
+}).catch(() => { $('hello').textContent = 'البطاقة غير موجودة'; });
+</script>
+</body>
+</html>

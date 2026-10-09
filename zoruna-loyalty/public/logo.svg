@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- شعار مؤقت: نخلة بصراوية فوق موج شط العرب. استبدله بشعار المطعم. -->
+  <rect width="120" height="120" rx="26" fill="#14324a"/>
+  <path d="M60 92 C61 76 61 62 60 46" stroke="#e9a820" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <g fill="#e9a820">
+    <path d="M60 46 C50 34 36 32 24 38 C38 38 48 42 60 48Z"/>
+    <path d="M60 46 C70 34 84 32 96 38 C82 38 72 42 60 48Z"/>
+    <path d="M60 46 C54 30 44 22 32 22 C44 28 52 36 59 48Z"/>
+    <path d="M60 46 C66 30 76 22 88 22 C76 28 68 36 61 48Z"/>
+    <path d="M60 46 C58 34 60 24 66 16 C64 28 63 38 61 47Z"/>
+    <circle cx="55" cy="52" r="3.2"/><circle cx="65" cy="52" r="3.2"/><circle cx="60" cy="55" r="3.2"/>
+  </g>
+  <path d="M22 96 q9 -6 19 0 t19 0 t19 0 t19 0" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>
+</svg>
